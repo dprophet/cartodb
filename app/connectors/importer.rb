@@ -183,6 +183,7 @@ module CartoDB
           table.map.scrollwheel = data['scrollwheel']
           table.alias = data['alias']
           table.schema_alias = data['schema_alias']
+          table.aliases = data['aliases']
           table.save
 
           # Get remote vis layer configs
