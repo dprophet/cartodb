@@ -184,6 +184,8 @@ module CartoDB
           table.alias = data['alias']
           table.schema_alias = data['schema_alias']
           table.aliases = data['aliases']
+          table.name_alias = data['name_alias']
+          table.column_aliases = data['column_aliases']
           table.save
 
           # Get remote vis layer configs
