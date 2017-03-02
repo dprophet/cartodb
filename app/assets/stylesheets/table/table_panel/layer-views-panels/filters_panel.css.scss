@@ -200,7 +200,11 @@
         input.filterInput.x::-ms-clear {display: none; width:0; height:0;}
 
         .filterSelectViewOptions {
-          margin: 0 30px 0 30px
+          margin: 0 30px 0 30px;
+
+          ul.items {
+             margin: 0;
+          }
         }
 
         .header {
@@ -372,7 +376,7 @@
         padding: 0;
         clear:both;
         overflow:hidden;
-        z-index: 100;
+        z-index: 50;
         
 
         .view_mode {
@@ -521,12 +525,42 @@
             background-size: 7px 7px;
             background-color: $SelectionBlue2;
           }
+          &.selected .value-largeset { background: #82D992; color:#fff; }
           
 
           .value {
             position:absolute;
             right: 0; 
             color:$Grey1;
+          }
+          .value-largeset {
+            position:absolute;
+            top: 10px; right: 25px;
+            font-size:10px;
+            padding: 2px 4px;
+            border:1px solid #82D992;
+            background:#fff;
+            @include border-radius(2px);
+            color:#82D992;
+
+            @include simple-transition(background-color, 100ms);
+          }
+
+          &:hover .remove-item { @include opacity(1); }
+
+          .remove-item {
+            float: right;
+            margin-top: 0px;
+            margin-right: 5px;
+            min-height: 13px;
+            @include opacity(0);
+
+            @include size(13px);
+            @include position(17px, 0, false, false);
+            @include simple-transition(opacity, 150ms);
+            @include common-sprite(close_grey);
+
+            &:hover {@include common-sprite(close_grey, $offset-y:-13px);}
           }
         }
       }
@@ -538,6 +572,40 @@
       .empty  { display:none; }
 
       .loading   { display:block; }
+
+      .range-text {
+        padding: 1px 3px 1px 3px;
+        display: inline;
+      }
+
+      .range-text:hover {
+        padding: 0 2px 0 2px;
+        border: solid thin #666;
+        cursor: pointer;
+      }
+
+      .range-date-text {
+        padding: 1px 3px 1px 3px;
+        display: inline;
+      }
+
+      .range-date-text:hover {
+        padding: 0 2px 0 2px;
+        border: solid thin #666;
+        cursor: pointer;
+      }
+
+      .date-min, .date-max {
+        width: 72px;
+        cursor: text;
+      }
+
+      .ui-datepicker-div {
+        position: absolute;
+        z-index: 1;
+        top: 68px;
+        left: 30px;        
+      }
 
       .range-number { height: 35px; }
       .range-number input { width: 45%; }
