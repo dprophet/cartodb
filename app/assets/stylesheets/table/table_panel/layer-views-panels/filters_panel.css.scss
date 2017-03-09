@@ -365,7 +365,7 @@
         }
 
         .scroll { 
-          width: 380px; 
+          width: 370px; 
           max-height: 156px; 
           overflow: hidden; 
           outline:none;
@@ -539,7 +539,7 @@
             background-size: 7px 7px;
             background-color: $SelectionBlue2;
           }
-          &.selected .value-largeset { background: #82D992; color:#fff; }
+          // &.selected .value-largeset { background: #82D992; color:#fff; }
           
 
           .value {
@@ -549,15 +549,15 @@
           }
           .value-largeset {
             position:absolute;
-            top: 10px; right: 25px;
+            top: 0; right: 25px;
             font-size:10px;
             padding: 2px 4px;
-            border:1px solid #82D992;
-            background:#fff;
-            @include border-radius(2px);
-            color:#82D992;
+            border:none;
+            background:none;
+            // @include border-radius(2px);
+            color:$Grey1;
 
-            @include simple-transition(background-color, 100ms);
+            // @include simple-transition(background-color, 100ms);
           }
 
           &:hover .remove-item { @include opacity(1); }
@@ -567,14 +567,15 @@
             margin-top: 0px;
             margin-right: 5px;
             min-height: 13px;
+            background: url(../images/beam_standard_button_icon_delete.png) no-repeat center;
             @include opacity(0);
 
             @include size(13px);
-            @include position(17px, 0, false, false);
+            @include position(4px, 0, false, false);
             @include simple-transition(opacity, 150ms);
-            @include common-sprite(close_grey);
+            // @include common-sprite(close_grey);
 
-            &:hover {@include common-sprite(close_grey, $offset-y:-13px);}
+            // &:hover {@include common-sprite(close_grey, $offset-y:-13px);}
           }
         }
       }
@@ -631,7 +632,7 @@
       .hist { margin: auto; position: relative; @include inline-block(); bottom: -3px; }
       .background.bar { fill: #E5E5E5; }
       .foreground.bar { fill: #4DC964; fill-opacity: .3; }
-      .axis path, .axis line { fill: none; stroke: #000; shape-rendering: crispEdges; }
+      .axis path, .axis line { fill: none; stroke: #d8d8d8; shape-rendering: crispEdges; }
       .axis text { font: 10px sans-serif; }
       .brush rect.extent { fill: $SelectionBlue3; fill-opacity: .2; }
       .brush .resize path { fill: $Grey9; stroke: $Black; }
