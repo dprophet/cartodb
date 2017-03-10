@@ -3,14 +3,14 @@
 @import "../variables/sizes";
 
 
-.SideMenu {
+.LeftMenu {
   width: 200px;
   float: left;
   display: block;
   border-right: 1px solid #000000;
 }
 
-.SideMenuContent {
+.LeftMenuContent {
   padding: 10px;
   .MenuItem {
     cursor:pointer;

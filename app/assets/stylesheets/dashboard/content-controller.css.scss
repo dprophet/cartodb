@@ -11,6 +11,7 @@
   display: block;
   min-height: 600px;
   margin: 0 auto;
+  top: 40px;
 }
 
 .ContentController.on-boarding { 
@@ -20,4 +21,6 @@
 
 .ContentController .ContentList { 
   float: left;
+  flex: 1 1 auto;
+  padding: 0 10px 0 10px;
 }
