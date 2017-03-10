@@ -539,7 +539,6 @@
             background-size: 7px 7px;
             background-color: $SelectionBlue2;
           }
-          // &.selected .value-largeset { background: #82D992; color:#fff; }
           
 
           .value {
@@ -554,10 +553,7 @@
             padding: 2px 4px;
             border:none;
             background:none;
-            // @include border-radius(2px);
             color:$Grey1;
-
-            // @include simple-transition(background-color, 100ms);
           }
 
           &:hover .remove-item { @include opacity(1); }
@@ -573,9 +569,6 @@
             @include size(13px);
             @include position(4px, 0, false, false);
             @include simple-transition(opacity, 150ms);
-            // @include common-sprite(close_grey);
-
-            // &:hover {@include common-sprite(close_grey, $offset-y:-13px);}
           }
         }
       }
