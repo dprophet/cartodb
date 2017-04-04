@@ -34,7 +34,6 @@ gem 'ejs',                     '~> 1.1.1'
 gem 'execjs',                  '~> 0.4' # Required by ejs
 
 gem 'net-ldap',                '0.11'
-gem 'ruby-saml',               '~>1.0.0'
 gem 'json-schema',             '2.0.0'
 
 group :production, :staging do
