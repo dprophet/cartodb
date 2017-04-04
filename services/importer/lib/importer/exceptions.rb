@@ -178,7 +178,7 @@ module CartoDB
       CartoDB::Datasources::GDriveNoExternalAppsAllowedError      => 1008,
       CartoDB::Importer2::BaseConnector::ConnectorError               => 1500,
       CartoDB::Importer2::BaseConnector::InvalidChannelError          => 1501,
-      CartoDB::Importer2::BaseConnector::InvalidParametersError       => 1502
+      CartoDB::Importer2::BaseConnector::InvalidParametersError       => 1502,
       Carto::Connector::ConnectorError               => 1500,
       Carto::Connector::ConnectorsDisabledError      => 1501,
       Carto::Connector::InvalidParametersError       => 1502
