@@ -121,7 +121,7 @@
       "it",
       "xit",
       "expect",
-      "$"
+      "$",
       "localStorage"
     ],
     "ignore": [
