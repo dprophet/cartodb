@@ -77,10 +77,12 @@ module CartoDB
           name = result.name
         else
           # Sanitizing table name if it corresponds with a PostgreSQL reseved word
-          result.name = "#{result.name}_t" if CartoDB::POSTGRESQL_RESERVED_WORDS.map(&:downcase).include?(result.name.downcase)
+          result.name = Carto::DB::Sanitize.sanitize_identifier(result.name)
+
           runner.log.append("Before renaming from #{result.table_name} to #{result.name}")
           name = rename(result, result.table_name, result.name)
           result.name = name
+
           runner.log.append("Before moving schema '#{name}' from #{ORIGIN_SCHEMA} to #{@destination_schema}")
           move_to_schema(result, name, ORIGIN_SCHEMA, @destination_schema)
         end
