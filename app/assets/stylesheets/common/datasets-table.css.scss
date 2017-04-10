@@ -274,6 +274,10 @@ $bannedColor: #E1A7A5;
   .DatasetsTable-itemStatus { color: $bannedColor }
 }
 
+.DatasetInfoTooltip {
+  text-align: left;
+}
+
 @media only screen and (max-width: $sMedia-mobile) and (max-width: 959px) {
   .DatasetsTable {
     width: 100%;
