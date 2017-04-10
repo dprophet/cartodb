@@ -1120,7 +1120,7 @@ div.search-result-dropdown {
   &:hover{
     background-color: $DarkGrey1;
   }
-}
+} 
 
 .search-result-row .found-sub {
   font-weight: bold;
@@ -1148,4 +1148,19 @@ div.search-result-dropdown {
 }
 :fullscreen {
   top: 0!Important; left: 0!Important; right: 0!Important; bottom: 0!Important;
+}
+
+
+//bloomberg
+
+.blp-toolbar {
+  align-items: center;
+  display: flex;
+  height: 45px;
+  margin: 0;
+  }
+
+.blp-map-title {
+  line-height: 48px;
+  margin-right: 12px;
 }
