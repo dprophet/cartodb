@@ -63,6 +63,7 @@ module Carto
           end
         end
         parent_category = params.fetch('parent_category', -1)
+        asc_order = params.fetch('asc_order', 'false')
 
         presenter_cache = Carto::Api::PresenterCache.new
 
@@ -70,7 +71,7 @@ module Carto
           # TODO: undesirable table hardcoding, needed for disambiguation. Look for
           # a better approach and/or move it to the query builder
           excludedNames = [emptyDatasetName]
-          query = vqb.with_order("visualizations.#{order}", :desc).with_excluded_names(excludedNames)
+          query = vqb.with_order("visualizations.#{order}", asc_order == 'true' ? :asc : :desc).with_excluded_names(excludedNames)
           if parent_category != -1
             query = query.with_parent_category(parent_category.to_i)
           end
@@ -91,7 +92,7 @@ module Carto
         else
           # TODO: undesirable table hardcoding, needed for disambiguation. Look for
           # a better approach and/or move it to the query builder
-          query = vqb.with_order("visualizations.#{order}", :desc)
+          query = vqb.with_order("visualizations.#{order}", asc_order == 'true' ? :asc : :desc)
           if parent_category != -1
             query = query.with_parent_category(parent_category.to_i)
           end
@@ -175,13 +176,34 @@ module Carto
 
       def subcategories
         categoryId = params[:category_id]
+        counts = params[:counts]
 
-        categories = Sequel::Model.db.fetch("
-          SELECT id, name, parent_id, list_order FROM visualization_categories
-            WHERE id = ANY(get_viz_child_category_ids(?))
-            ORDER BY parent_id, list_order, name",
-            categoryId
-          ).all
+        if counts == 'true'
+          categories = Sequel::Model.db.fetch("
+            SELECT categories.*,
+              (SELECT COUNT(*) FROM visualizations
+                LEFT JOIN external_sources es ON es.visualization_id = visualizations.id
+                LEFT JOIN external_data_imports edi
+                  ON edi.external_source_id = es.id
+                    AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
+                    AND edi.synchronization_id IS NOT NULL
+            WHERE user_id=? AND
+              edi.id IS NULL AND
+              (type = 'table' OR type = 'remote') AND
+              (category = categories.id OR category = ANY(get_viz_child_category_ids(categories.id)))) AS count FROM
+                (SELECT id, name, parent_id, list_order FROM visualization_categories
+                    WHERE id = ANY(get_viz_child_category_ids(?))
+                    ORDER BY parent_id, list_order, name) AS categories;",
+              current_user.id, categoryId
+            ).all
+        else
+          categories = Sequel::Model.db.fetch("
+            SELECT id, name, parent_id, list_order, -1 AS count FROM visualization_categories
+              WHERE id = ANY(get_viz_child_category_ids(?))
+              ORDER BY parent_id, list_order, name",
+              categoryId
+            ).all
+        end
 
         render :json => categories.to_json
       end
