@@ -4,27 +4,35 @@
 
 
 .LeftMenu {
+  flex-shrink: 0;
   width: 200px;
-  float: left;
-  display: block;
-  border-right: 1px solid #000000;
-  flex: 0 0 200px;
-}
+  border-right: 1px solid $Black;
+  background-color: $DarkGrey6;
+
+} 
 
 .LeftMenuContent {
-  padding: 10px;
   .MenuItem {
     cursor:pointer;
-    padding: 2px 4px 2px 4px;
+    padding: 0px 12px;
+    color: $Grey3;
+    line-height: 23px;
+    &:hover {
+      background-color: #292929;
+    }
     &.selected {
-      background: #333333;
+      background: #1E6AB4;
+      color: $White;
     }
     &.expanded .ParentChevron {
-      background-image: url('../images/beam_dropdown_arrow.png');
+      background-image: url('../images/beam_dropdown_right.png');
     }
   }
-}
 
+  a {
+    color: inherit;
+  }
+}
 .CategoryTree {
   .SubCategories {
     display: none;
@@ -47,11 +55,38 @@
     width:12px;
     height:12px;
     margin-right:5px;
-    background-size:contain;
-    background-image: url('../images/beam_dropdown_arrow_right.png');
+    background-image: url('../images/beam_dropdown_arrow_down.png');
     background-repeat: no-repeat;
   }
-  .CategoryCount {
+  .CategoryCount { 
     float: right;
+  }
+}
+
+
+//bloomberg styles 
+
+.blp-navigator {
+  background: #1e1e1e;
+}
+
+.blp-navigator-category {
+  color: $White;
+  padding: 0px 12px;
+}
+
+.blp-navigator-item {
+  cursor: pointer;
+  padding: 0px 12px;
+  color: $Grey3;
+  line-height: 23px;
+
+  &:hover {
+    background-color: $DarkGrey3;
+  }
+
+
+  &.blp-selected {
+      background: #1E6AB4;
   }
 }
