@@ -9,9 +9,10 @@
 .MapsList {
   @include display-flex();
   @include justify-content(flex-start, start);
+  display: flex;
   justify-content: flex-start;
-  @include align-items(center);
-  @include flex-wrap(wrap);
+  align-items: center;
+  flex-wrap: wrap;
   position: relative;
   width: $sLayout-width + $sMargin-element;
   margin-left: auto;

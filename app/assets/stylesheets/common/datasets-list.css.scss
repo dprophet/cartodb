@@ -189,8 +189,6 @@ $bannedColor: #E1A7A5;
     }
   }
   .DatasetsList-itemDescription {
-    margin-top: 4px;
-    height: $sLineHeight-normal;
     .DefaultDescription {
       @include line-clamp(1);
     }
