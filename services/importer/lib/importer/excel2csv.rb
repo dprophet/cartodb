@@ -64,13 +64,23 @@ module CartoDB
 
       protected
 
+      def newline_remover_path
+        File.expand_path(NEWLINE_REMOVER_RELPATH, __FILE__)
+      end
+
+
       def in2csv_warning_filter
         IN2CSV_WARNINGS.map { |w| ['grep', '-v', w.gsub('*', "\\*")] }
       end
 
-      def newline_remover_path
-        [CartoDB.python_bin_path, newline_remover_path]
+      def newline_remover_command
+        [newline_remover_path]
       end
+
+      def in2csv_command
+          "in2csv"
+      end
+
 
       attr_reader :filepath, :job
     end
