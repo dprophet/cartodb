@@ -68,7 +68,6 @@ module CartoDB
         File.expand_path(NEWLINE_REMOVER_RELPATH, __FILE__)
       end
 
-
       def in2csv_warning_filter
         IN2CSV_WARNINGS.map { |w| ['grep', '-v', w.gsub('*', "\\*")] }
       end
@@ -80,7 +79,6 @@ module CartoDB
       def in2csv_command
           "in2csv"
       end
-
 
       attr_reader :filepath, :job
     end
