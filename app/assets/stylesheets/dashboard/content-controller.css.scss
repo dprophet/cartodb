@@ -1,32 +1,36 @@
 @import "../variables/colors";
 // Content controller
-// 
+//
 // Main view for new dashboard, where maps or
 // datasets results appear.
 // --------------------------------------------------
 
 .ContentController {
-  background-color: $DarkGrey6;
-  position: relative;
+  padding: 5px;
   display: flex;
+  height: 100%;
+  position: relative;
+  display: block;
   min-height: 600px;
   margin: 0 auto;
-  top: 40px;
+  padding-top: 80px;
+  -moz-font-smoothing: antialiased;
+  -webkit-font-smoothing: antialiased;
 
   .RightContent {
+    display: flex;
     flex: 1 1 auto;
-
+    flex-flow: column;
+    background: $Black;
+    margin-left: 5px;
     .IntermediateInfo {
       min-height: 180px;
     }
   }
 
   .ContentList {
+    background-color: $DarkGrey9;
     flex: 1 1 auto;
-    padding: 0 10px 0 10px;
-    display: flex;
-    flex-direction: column;
-
     .found-sub {
       font-weight: bold;
       color: $Grey1;
@@ -34,7 +38,6 @@
   }
 
   .SearchBar {
-    padding: 10px;
     .search-bar-input {
       color: black;
       width:100%;
@@ -44,7 +47,7 @@
   }
 }
 
-.ContentController.on-boarding { 
+.ContentController.on-boarding {
   padding-top: 0;
   min-height: initial;
 }
