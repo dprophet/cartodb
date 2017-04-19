@@ -4,6 +4,9 @@ include Carto::Db::MigrationHelper
 
 migration(
   Proc.new do
+    execute "UPDATE users builder_enabled = 'f', engine_enabled = 'f';"
+    execute "UPDATE organizations builder_enabled = 'f', engine_enabled = 'f';"
+
     set_column_default :organizations, :builder_enabled, false
     set_column_default :users, :builder_enabled, false
     set_column_default :organizations, :engine_enabled, false
