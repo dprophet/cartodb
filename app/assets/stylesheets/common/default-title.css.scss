@@ -5,23 +5,15 @@
 //
 // --------------------------------------------------
 .DefaultTitle {
-  font-weight: $sFontWeight-normal;
-  font-size: $sFontSize-larger;
-  line-height: 20px;
-  margin: 0px;
   color: $Grey1;
+  font-weight: normal;
+  margin: 0px;
+  font-size: 15px;
 }
 .DefaultTitle.is-disabled {
   color: rgba($cTypography-paragraphs, 0.4);
 }
 .DefaultTitle-link {
-  color: $Grey1;
-  &:hover {
-    color: $White;
-    text-decoration: none;
-  }
-}
-.DefaultTitle a {
   color: $Grey1;
   &:hover {
     color: $White;

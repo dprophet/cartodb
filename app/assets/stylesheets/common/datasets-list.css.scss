@@ -20,17 +20,12 @@ $bannedColor: #E1A7A5;
 .DatasetsList-item {
   position: relative;
   @include display-flex();
-  @include align-items(center);
-  @include transition(border, 200ms, ease-in);
   border: 1px solid transparent;
   border-bottom: 1px solid $DarkGrey8;
   padding: 6px;
-  box-sizing: border-box;
-  margin-bottom: -1px;
 }
 .DatasetsList-item--selectable:hover,
-.DatasetsList-item--selectable.is--selected {
-  border-radius: 4px;
+.DatasetsList-item--selectable.is--selected {  
 }
 .DatasetsList-item--selectable:hover {
   background-color: $gridRowBackgroundHover;
@@ -137,7 +132,6 @@ $bannedColor: #E1A7A5;
   @include display-flex();
   @include flex-direction(column);
   @include opacity(1);
-  @include flex(1);
   @include transition(opacity, $opacityTransition);
   z-index: 1;
 }
@@ -170,13 +164,16 @@ $bannedColor: #E1A7A5;
 }
 .DatasetsList-itemMeta {
   @include display-flex();
-  @include align-items(center);
+  @include justify-content(flex-start, start);
+  @include flex-wrap(wrap);
   margin-bottom: 2 * $sMargin-min;
 }
 .DatasetsList-itemTags { margin-top: 4px }
 
   .DatasetsList-itemMeta > * {
-    margin-right: 12px;
+    width: auto;
+    margin-right: 18px;
+    text-align: center;
   }
   .DatasetsList-itemMeta > *:last-child { margin-right: 0 }
   .DatasetsList-itemMeta > *:nth-child(2) { @include flex-order(2) }
@@ -192,6 +189,8 @@ $bannedColor: #E1A7A5;
     }
   }
   .DatasetsList-itemDescription {
+    margin-top: 4px;
+    height: $sLineHeight-normal;
     .DefaultDescription {
       @include line-clamp(1);
     }
@@ -203,11 +202,14 @@ $bannedColor: #E1A7A5;
   .DatasetsList-itemDescription,
   .SizeIndicator,
   .SizeIndicator .iconFont { color: $bannedColor }
+
   .DatasetsList-itemCategory { @include geometry-type-icon(-160px, -80px) }
   .DatasetsList-itemCategory.is--lineDataset { @include geometry-type-icon(-40px, -80px) }
   .DatasetsList-itemCategory.is--polygonDataset { @include geometry-type-icon(-80px, -80px) }
   .DatasetsList-itemCategory.is--pointDataset { @include geometry-type-icon(0, -80px) }
   .DatasetsList-itemCategory.is--rasterDataset { @include geometry-type-icon(-120px, -80px) }
+
+  .DatasetsList-itemStatus { color: $bannedColor }
 }
 
 @media only screen and (max-width: $sMedia-mobile) and (max-width: 959px) {
@@ -261,7 +263,7 @@ $bannedColor: #E1A7A5;
   .DatasetsList-itemInfo {
     @include flex-direction(row);
     @include justify-content(space-between, justify);
-    @include align-items(center);
+    @include align-items(flex-start, start);
   }
   .DatasetsList-itemPrimaryInfo { width: 430px }
   .DatasetsList-itemSecondaryInfo {
@@ -278,7 +280,9 @@ $bannedColor: #E1A7A5;
     margin-bottom: 0;
   }
   .DatasetsList-itemMeta > * {
-    margin-right: 12px;
+    width: auto;
+    margin-right: 18px;
+    text-align: center;
   }
   .DatasetsList-itemMeta > *:last-child { margin-right: 0 }
   .DatasetsList-itemMeta > *:nth-child(2) { @include flex-order(2) }

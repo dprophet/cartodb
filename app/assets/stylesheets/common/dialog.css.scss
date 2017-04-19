@@ -1,8 +1,6 @@
 @import "../variables/mixins";
 @import "../variables/colors";
 @import "../variables/sizes";
-@import 'cdb-variables/colors';
-
 
 $sSmallWidth: 670px;
 
@@ -16,7 +14,7 @@ body.is-inDialog {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1000;
+  z-index: 50;
   background-color: $DarkGrey6;
 }
 .Dialog-contentWrapper { // this is necessary since the Dialog element might have `position: block` set by .hide/.show
@@ -42,7 +40,6 @@ body.is-inDialog {
   position: fixed;
   top: $sMargin-group; // to be aligned with header icon
   right: $sMargin-section;
-  z-index: 2;
 }
 .Dialog-backBtn {
   position: fixed;
@@ -97,6 +94,7 @@ body.is-inDialog {
 .Dialog-body.Dialog-body--create {
   position: relative;
   width: 100%;
+  padding-bottom: 0;
   overflow: auto;
 }
 .Dialog-body.Dialog-body--share {
@@ -126,11 +124,7 @@ body.is-inDialog {
   position: relative;
   background: none;
 }
-.Dialog-body .ListingContent {
-  margin-bottom: 100px;
-}
-.Dialog-footer {
-  padding: $sMargin-group 0;
+.Dialog-footer {  
   text-align: center;
 }
 .Dialog-footer--withoutBorder { border-top: none }
@@ -187,13 +181,9 @@ body.is-inDialog {
     color: $cIcons-active !important;
   }
 }
-.Dialog-headerIcon--twitter {
-  border-color: #55ACEE;
-  color: #55ACEE;
-}
 .Dialog-headerIcon--negative {
-  color: $cError;
-  border-color: $cError;
+  color: $cHighlight-negative;
+  border-color: $cHighlight-negative;
 }
 .Dialog-headerIcon--positive {
   color: $cHighlight-positive;
@@ -369,9 +359,3 @@ $sNarrower-width: 620px;
   }
 }
 
-@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-  /* IE10+ CSS styles go here */
-  .Dialog-body .ListingContent {
-    margin-bottom: 200px;
-  }
-}

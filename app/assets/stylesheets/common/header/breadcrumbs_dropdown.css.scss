@@ -13,30 +13,28 @@
 .BreadcrumbsDropdown--compact { width: 120px }
 
 .BreadcrumbsDropdown-listItem {
-  display: block;
-  margin-top: 0!important;
-  padding: 16px;
+  display: block;  
+
 }
 .BreadcrumbsDropdown-listItem.is-dark {
   border-top: 1px solid $Black;
   padding-top: 6px;
   margin-top: 6px;
 }
-.BreadcrumbsDropdown-listItem.is-first {
-  border-radius: 2px;
-}
+.BreadcrumbsDropdown-icon,
 .BreadcrumbsDropdown-options {
   display: inline-block;
   vertical-align: top;
 }
 .BreadcrumbsDropdown-icon {
+  display: inline-block;
+  margin-right: $sMargin-elementInline;
   width: 20px;
 }
 
 .BreadcrumbsDropdown-optionsItem {
   display: block;
-  font-size: $sFontSize-normal;
-  font-weight: $sFontWeight-normal;
+  font-size: 13px;
   color: $Amber1;
   padding: 0px 12px;
   width: 124px;
@@ -54,10 +52,13 @@
   }
 }
 .BreadcrumbsDropdown-lockIcon {
+  display: inline-block;
   width: 20px;
   height: 20px;
+  line-height: 20px;
   border-radius: 2px;
   background: $cIcons-default;
+  text-align: center;
   font-weight: $sFontWeight-lighter;
   font-size: $sFontSize-smaller;
   color: white;
