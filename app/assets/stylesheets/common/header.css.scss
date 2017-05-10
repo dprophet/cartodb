@@ -18,9 +18,6 @@ $cHeader-dark:  rgba(#3A91D7, 1);
 }
 .Header-inner {
   position:relative;
-  @include display-flex();
-  @include justify-content(space-between, justify);
-  @include align-items(center); 
   display: flex;
   justify-content: flex-start;
   @include align-items(center);
@@ -32,15 +29,6 @@ $cHeader-dark:  rgba(#3A91D7, 1);
   @include display-flex();
   @include justify-content(space-between, justify);
   @include align-items(center);
-   > .button {
-      @include bb_button_style;
-      margin-right: 12px;
-      height: 21px;
-
-      > a {
-        color: #f2f2f2;
-      }
-  }
 }
 .Header-navigationBreadcrumb {
   @include display-flex();
@@ -98,6 +86,11 @@ $cHeader-dark:  rgba(#3A91D7, 1);
   color: #fff;
   transition: all .15s;
 
+  &:hover {
+    text-decoration: none;
+    color: rgba(#fff, .6);;
+  }
+}
 .Header-navigationBreadcrumbItem:first-child { padding-left: 0 }
 .Header-navigationBreadcrumbLink {
   font-size: 15px;
@@ -124,11 +117,22 @@ $cHeader-dark:  rgba(#3A91D7, 1);
   @include display-flex();
   @include justify-content(space-between, justify);
   @include align-items(center, center);
+  .UserAvatar {
+    background: url('../images/menu-icon.png');
+    background-size: contain;
+    opacity: 0.7;
+    margin: 2px 10px 2px 2px;
+    width: 24px;
+    height: 24px;
+  }
 }
 .Header-settingsItem {
   position: relative;
-  font-size: 15px;
-  margin-right: 24px;
+  margin-left: $sMargin-section;
+  font-weight: $sFontWeight-normal;
+  font-size: $sFontSize-smallUpperCase;
+  line-height: $sLineHeight-larger;
+  text-transform: uppercase;
 }
 .Header-settingsItem--avatar {}
 .Header-settingsLink {
@@ -164,7 +168,6 @@ $cHeader-dark:  rgba(#3A91D7, 1);
 
   .Header .Header-inner {
     height: $height;
-
   }
   .Header {
     height: $height;
