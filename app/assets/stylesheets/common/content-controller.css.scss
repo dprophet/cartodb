@@ -6,12 +6,6 @@
 // --------------------------------------------------
 
 .ContentController {
-  background-color: $DarkGrey6;
-  position: relative;
-  display: block;
-  min-height: 600px;
-  margin: 0 auto;
-  top: 40px;
   padding: 5px;
   display: flex;
   height: calc(100% - 40px);
