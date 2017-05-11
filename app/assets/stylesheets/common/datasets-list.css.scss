@@ -184,8 +184,9 @@ $bannedColor: #E1A7A5;
   }
   .DatasetsList-itemDescription {
     .DefaultDescription {
-      line-height: 27px;
       @include line-clamp(1);
+      line-height: 27px;
+      height: 27px;
     }
   }
 
