@@ -7,16 +7,11 @@
 //
 // --------------------------------------------------
 .MapsList {
-  @include display-flex();
-  @include justify-content(flex-start, start);
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-wrap: wrap;
   position: relative;
-  width: $sLayout-width + $sMargin-element;
-  margin-left: auto;
-  margin-right: auto;
 }
 .MapsListScrollable {
   height: 100%;
