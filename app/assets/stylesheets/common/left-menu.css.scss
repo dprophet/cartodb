@@ -32,6 +32,10 @@
     &.expanded .ParentChevron {
       background-image: url('../images/beam_dropdown_arrow_down.png');
     }
+    &.MenuItem-samples {
+      margin-top: 13px;
+      color: $White;
+    }
   }
 
   a {
