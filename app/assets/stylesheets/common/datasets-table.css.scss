@@ -28,7 +28,7 @@ $bannedColor: #E1A7A5;
     text-align: left;
     border-right: 1px solid $Black;
     line-height: 27px;
-    padding: 0px 6px !important;
+    padding: 0px 6px;
 
     .DatasetTitle-link {
       border-bottom: 1px $Grey2 dotted;
@@ -303,15 +303,15 @@ $bannedColor: #E1A7A5;
   float: right;
   width: 10px;
   height: 20px;
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
 .DatasetsTableHeaderOrderAsc {
   @include DatasetsTableHeaderOrder;
-  background: url('../images/sprites/table/filters_scroll_up.png') no-repeat top;
+  background: url('../images/column-state-sorted-asc-unfiltered.png') no-repeat center;
 }
 
 .DatasetsTableHeaderOrderDesc {
   @include DatasetsTableHeaderOrder;
-  background: url('../images/sprites/table/filters_scroll_down.png') no-repeat top;
+  background: url('../images/column-state-sorted-desc-unfiltered.png') no-repeat center;
 }
