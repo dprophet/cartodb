@@ -46,11 +46,15 @@
         cursor: default;
         position:relative;
         right: -5px;
-        background: $DarkGrey9 url(../images/close_layer.png) no-repeat center;
+        background: url(../images/beam_msg_search_clear_normal.svg) no-repeat center;
+        background-size: 13px;
         width: 17px;
         height: 17px;
         &:hover {
-          background-color: $DarkGrey1;
+          background-image: url(../images/beam_msg_search_clear_hover.svg)
+        }
+        &:active {
+          background-image: url(../images/beam_msg_search_clear_press.svg)
         }
       }
     }
