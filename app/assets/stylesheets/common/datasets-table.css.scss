@@ -12,67 +12,83 @@ $bannedColor: #E1A7A5;
   position: relative;
   width: 100%;
   margin: 0 auto;
-  
 }
-.DatasetsTable thead {
-  background: #333333;
-}
-.DatasetsTable th {
-  border-bottom: 1px solid $DarkGrey8;
-}
-.DatasetsTable tr {
+
+.DatasetsTableRow {
   width: 100%;
-}
-.DatasetsTable th,td,
-.DatasetsTable-item td
-{
-  text-align: left;
-  padding: 5px;
-  border-right: 1px solid $DarkGrey8;
-  .DatasetTitle-link {
-    border-bottom: 1px $Grey2 dotted;
+  display: flex;
+  border-bottom: 1px solid $Black;
+
+  .DatasetsTableCell {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    text-align: left;
+    border-right: 1px solid $Black;
+    line-height: 27px;
+    padding: 0px 6px;
+
+    .DatasetTitle-link {
+      border-bottom: 1px $Grey2 dotted;
+    }
+
+    .EditableField.is-editing .EditableField-input {
+      height: 27px;
+    }
+
+    .DefaultDescription > p {
+      position: absolute;
+      left: 0;
+      right: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &:nth-child(1) { width: 26px; }
+    &:nth-child(2) { flex: 3 3 25%; }
+    &:nth-child(3) { flex: 4 4 35%; }
+    &:nth-child(4) { flex: 2 2 15%; }
+    &:nth-child(5) { width: 24px; }
   }
 }
 
-.DatasetsTable th
+.DatasetsTableHeader {
+  background: $DarkGrey5;
+  .DatasetsTableCell.sortable:hover {
+    background: $DarkGrey3;
+  }
+}
+
+.DatasetsTableHeaderContainer
 {
-  &:nth-child(1) { width: 24px; }
-  &:nth-child(2) { width: 32px; }
-  &:nth-child(3) { width: 30%; }
-  &:nth-child(5) { width: 120px; }
-  &:nth-child(6) { width: 24px; }
-  &:nth-child(7) { width: 24px; }
+  background: $DarkGrey5;
+  &.padded {
+    padding-right: 12px;
+  }
 }
 
 .DatasetsTable.is-hidden { display: none }
-.DatasetsTable-item {
-  border: 1px solid transparent;
-  border-bottom: 1px solid $DarkGrey8;
-  padding: 6px;
-}
 
-.DatasetsTable-item--selectable:hover,
-.DatasetsTable-item--selectable.is--selected {  
+.DatasetsTableRow--selectable:hover,
+.DatasetsTableRow--selectable.is--selected {  
 }
-.DatasetsTable-item--selectable:hover {
+.DatasetsTableRow--selectable:hover {
   background-color: $gridRowBackgroundHover;
   cursor: pointer;
-  .DatasetsTable-itemDescription .DefaultDescription:after {
-    @include background-horizontal(rgba(255,255,255,0), $gridRowBackgroundHover);
-  }
 }
-.DatasetsTable-item--selectable.is--selected {
+.DatasetsTableRow--selectable.is--selected {
   background-color: $gridRowBackgroundSelected;
   outline: 1px solid $SelectionBlue2;
   &:hover { cursor: default }
-  .DatasetsTable-itemDescription .DefaultDescription:after {
-    @include background-horizontal(rgba(255,255,255,0), $gridRowBackgroundSelected);
-  }
 }
 
 .RowCheckbox,
 .RowCheckbox.is--selected {
-  top: 4px;
+  position: relative;
+  top: 7px;
   left: 0;
   width: 13px;
   height: 13px;
@@ -90,7 +106,7 @@ $bannedColor: #E1A7A5;
 }
 
 .DatasetTypeIcon {
-  margin-top: 3px;
+  margin-top: 4px;
   width: 20px;
   height: 20px;
   background-size: contain;
@@ -115,12 +131,12 @@ $bannedColor: #E1A7A5;
   @include opacity(0);
   @include transition(opacity, $opacityTransition);
 }
-.DatasetsTable.is-loading .DatasetsTable-item,
-.DatasetsTable.is-loading .DatasetsTable-item--selectable,
-.DatasetsTable.is-loading .DatasetsTable-item--selectable.is--selected,
-.DatasetsTable.is-loading .DatasetsTable-item:hover,
-.DatasetsTable.is-loading .DatasetsTable-item--selectable:hover,
-.DatasetsTable.is-loading .DatasetsTable-item--selectable:hover.is--selected {
+.DatasetsTable.is-loading .DatasetsTableRow,
+.DatasetsTable.is-loading .DatasetsTableRow--selectable,
+.DatasetsTable.is-loading .DatasetsTableRow--selectable.is--selected,
+.DatasetsTable.is-loading .DatasetsTableRow:hover,
+.DatasetsTable.is-loading .DatasetsTableRow--selectable:hover,
+.DatasetsTable.is-loading .DatasetsTableRow--selectable:hover.is--selected {
   margin: 0;
   padding: $sMargin-group 0;
   border: none;
@@ -156,8 +172,8 @@ $bannedColor: #E1A7A5;
 .DatasetsTable-itemCategory.is--pointDataset { @include geometry-type-icon() }
 .DatasetsTable-itemCategory.is--rasterDataset { @include geometry-type-icon(-120px) }
 
-.DatasetsTable-item--selectable:hover,
-.DatasetsTable-item--selectable.is--selected {
+.DatasetsTableRow--selectable:hover,
+.DatasetsTableRow--selectable.is--selected {
   .DatasetsTable-itemCategory { @include geometry-type-icon(-160px, -40px) }
   .DatasetsTable-itemCategory.is--lineDataset { @include geometry-type-icon(-40px, -40px) }
   .DatasetsTable-itemCategory.is--polygonDataset { @include geometry-type-icon(-80px, -40px) }
@@ -278,78 +294,24 @@ $bannedColor: #E1A7A5;
   text-align: left;
 }
 
-@media only screen and (max-width: $sMedia-mobile) and (max-width: 959px) {
-  .DatasetsTable {
-    width: 100%;
-  }
-  .DatasetsTable-itemTitle {
-    margin-bottom: 3px;
-  }
-  .DatasetsTable-itemMeta {
-    @include align-items(center);
-  }
-  .DatasetsTable-itemMeta > * {
-    width: auto;
-    margin-right: 10px;
-    text-align: center;
-  }
-  .DatasetsTable-itemMeta > *:last-child { margin-right: 0 }
-  .DatasetsTable-itemMeta > *:nth-child(2) { @include flex-order(2) }
-  .DatasetsTable-itemMeta > *:nth-child(3) { @include flex-order(3) }
-  .DatasetsTable-itemMeta > *:nth-child(4) { @include flex-order(4) }
-  .DatasetsTable-itemMeta > *:nth-child(5) { @include flex-order(5) }
-}
-@media only screen and (max-width: $sMedia-tablet) {
-  .DatasetsTable {
-    width: 100%;
-  }
-  .DatasetsTable-itemTitle {
-    margin-bottom: 3px;
-  }
-  .DatasetsTable-itemMeta {
-    @include align-items(center);
-  }
-  .DatasetsTable-itemMeta > * {
-    width: auto;
-    margin-right: 10px;
-    text-align: center;
-  }
-  .DatasetsTable-itemMeta > *:last-child { margin-right: 0 }
-  .DatasetsTable-itemMeta > *:nth-child(2) { @include flex-order(2) }
-  .DatasetsTable-itemMeta > *:nth-child(3) { @include flex-order(3) }
-  .DatasetsTable-itemMeta > *:nth-child(4) { @include flex-order(4) }
+.DatasetsTableScrollable {
+  height:calc(100% - 28px);
+  overflow-y: auto;
 }
 
-@media (min-width: $sMedia-desktop) {
-  .DatasetsTable {
-    padding-left: 0;
-    padding-right: 0;
-  }
-  .DatasetsTable-itemInfo {
-    @include flex-direction(row);
-    @include justify-content(space-between, justify);
-    @include align-items(flex-start, start);
-  }
-  .DatasetsTable-itemPrimaryInfo { width: 430px }
-  .DatasetsTable-itemSecondaryInfo {
-    @include display-flex();
-    @include flex-direction(column);
-    flex-grow: 1;
-    width: 430px;
-  }
-  .DatasetsTable-itemTitle {
-    margin-bottom: 0;
-  }
-  .DatasetsTable-itemMeta {
-    @include justify-content(flex-end, end);
-    margin-bottom: 0;
-  }
-  .DatasetsTable-itemMeta > * {
-    margin-right: 18px;
-    text-align: center;
-  }
-  .DatasetsTable-itemMeta > *:last-child { margin-right: 0 }
-  .DatasetsTable-itemMeta > *:nth-child(2) { @include flex-order(2) }
-  .DatasetsTable-itemMeta > *:nth-child(3) { @include flex-order(3) }
-  .DatasetsTable-itemMeta > *:nth-child(4) { @include flex-order(4) }
+@mixin DatasetsTableHeaderOrder {
+  float: right;
+  width: 10px;
+  height: 20px;
+  margin-top: 4px;
+}
+
+.DatasetsTableHeaderOrderAsc {
+  @include DatasetsTableHeaderOrder;
+  background: url('../images/column-state-sorted-asc-unfiltered.png') no-repeat center;
+}
+
+.DatasetsTableHeaderOrderDesc {
+  @include DatasetsTableHeaderOrder;
+  background: url('../images/column-state-sorted-desc-unfiltered.png') no-repeat center;
 }

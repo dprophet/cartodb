@@ -120,10 +120,8 @@ $cHighlight-mainHover: rgba(#007FBD, 1);
 }
 
 .Button--toolbar {
-  @include bb_button_style;
   height: 27px;
   line-height: 25px;
-  padding: 0px 9px;
   margin-right: 4px;
 }
 

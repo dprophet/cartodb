@@ -7,13 +7,15 @@
 //
 // --------------------------------------------------
 .MapsList {
-  @include display-flex();
+  display: flex;
   justify-content: flex-start;
-  @include align-items(center);
-  @include flex-wrap(wrap);
+  align-items: center;
+  flex-wrap: wrap;
   position: relative;
-  margin-left: auto;
-  margin-right: auto;
+}
+.MapsListScrollable {
+  height: 100%;
+  overflow-y: auto;
 }
 .MapsList-footer {
   // To match the MapsList size above, with its margin+padding
