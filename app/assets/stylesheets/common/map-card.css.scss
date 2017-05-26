@@ -30,7 +30,7 @@ $sEditButtonSize: 50px;
   position: relative;
   width: $sCard-width - 10px - $sBorderCompensation;
   margin: 0 auto;
-  background-color: $DarkGrey3;
+  background-color: $nGrey14;
 }
 .MapCard.MapCard--borderless .MapCard-header:after {
   display: none;
@@ -117,14 +117,14 @@ $sEditButtonSize: 50px;
 }
 .MapCard--selectable {
   &:hover {
-    background-color: $DarkGrey7;
+    background-color: $nGrey16;
     .MapviewsGraph-bar {
       cursor: pointer;
       fill: rgba(#FFFFFF, 1);
     }
   }
   &.is-selected {
-    background-color: $DarkGrey2;
+    background-color: $nGrey13;
     
     .MapviewsGraph-bar {
      cursor: pointer;
@@ -170,7 +170,7 @@ $sEditButtonSize: 50px;
   @include display-flex();
   @include justify-content(center);
   @include align-items(center);
-  background: $Grey10;
+  background: $nGrey11;
 }
 .MapCard-header--fake:after,
 .MapCard.MapCard--squared .MapCard-header.MapCard-header--fake:after {
