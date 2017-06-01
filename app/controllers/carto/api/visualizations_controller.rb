@@ -264,14 +264,14 @@ module Carto
 
         sharedEmptyDatasetCondition = ''
         if current_user[:username] != Cartodb.config[:common_data]['username']
-          sharedEmptyDatasetCondition = " AND v.name <> '#{Cartodb.config[:shared_empty_dataset_name]}'"
+          sharedEmptyDatasetCondition = "AND v.name <> '#{Cartodb.config[:shared_empty_dataset_name]}'"
         end
         likedCondition = params.fetch(:only_liked, 'false') == 'true' ? 'WHERE likes > 0' : ''
-        lockedCondition = params.fetch(:locked, 'false') == 'true' ? ' AND locked=true' : ''
+        lockedCondition = params.fetch(:locked, 'false') == 'true' ? 'AND locked=true' : ''
         categoryCondition = ''
         parent_category = params.fetch(:parent_category, nil)
         if parent_category != nil
-          categoryCondition = "WHERE (category = ? OR category = ANY(get_viz_child_category_ids(?)))"
+          categoryCondition = "AND (v.category = ? OR v.category = ANY(get_viz_child_category_ids(?)))"
           args += [parent_category, parent_category]
         end
 
@@ -292,9 +292,8 @@ module Carto
                       LEFT JOIN user_tables AS ut ON ut.map_id=v.map_id
                       LEFT JOIN synchronizations AS s ON s.visualization_id = v.id
                       LEFT JOIN external_data_imports AS edis ON edis.synchronization_id = s.id
-                  WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{lockedCondition} #{sharedEmptyDatasetCondition}
+                  WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{lockedCondition} #{sharedEmptyDatasetCondition} #{categoryCondition}
                 ) AS results
-              #{categoryCondition}
             ) AS results2
             #{likedCondition}
             ORDER BY #{order} #{orderDir}",
