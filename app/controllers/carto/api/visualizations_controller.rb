@@ -266,12 +266,12 @@ module Carto
         if current_user[:username] != Cartodb.config[:common_data]['username']
           sharedEmptyDatasetCondition = " AND v.name <> '#{Cartodb.config[:shared_empty_dataset_name]}'"
         end
-        likedCondition = params.fetch(:only_liked, 'false') == 'true' ? ' AND likes > 0' : ''
+        likedCondition = params.fetch(:only_liked, 'false') == 'true' ? 'WHERE likes > 0' : ''
         lockedCondition = params.fetch(:locked, 'false') == 'true' ? ' AND locked=true' : ''
         categoryCondition = ''
         parent_category = params.fetch(:parent_category, nil)
         if parent_category != nil
-          categoryCondition = "AND category = ? OR category = ANY(get_viz_child_category_ids(?))"
+          categoryCondition = "WHERE (category = ? OR category = ANY(get_viz_child_category_ids(?)))"
           args += [parent_category, parent_category]
         end
 
@@ -294,9 +294,9 @@ module Carto
                       LEFT JOIN external_data_imports AS edis ON edis.synchronization_id = s.id
                   WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{lockedCondition} #{sharedEmptyDatasetCondition}
                 ) AS results
-              WHERE 1=1 #{categoryCondition}
+              #{categoryCondition}
             ) AS results2
-            WHERE 1=1 #{likedCondition}
+            #{likedCondition}
             ORDER BY #{order} #{orderDir}",
             *args
           ).all
