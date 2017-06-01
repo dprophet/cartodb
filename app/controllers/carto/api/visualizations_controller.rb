@@ -17,7 +17,7 @@ module Carto
       include VisualizationsControllerHelper
 
       ssl_required :index, :show
-      ssl_allowed  :vizjson2, :vizjson3, :likes_count, :likes_list, :is_liked, :list_watching, :static_map, :search, :subcategories
+      ssl_allowed  :vizjson2, :vizjson3, :likes_count, :likes_list, :is_liked, :list_watching, :static_map, :search, :list, :subcategories
 
       # TODO: compare with older, there seems to be more optional authentication endpoints
       skip_before_filter :api_authorization_required, only: [:index, :vizjson2, :vizjson3, :is_liked, :static_map]
@@ -31,6 +31,9 @@ module Carto
 
       rescue_from Carto::LoadError, with: :rescue_from_carto_error
       rescue_from Carto::UUIDParameterFormatError, with: :rescue_from_carto_error
+
+      LIST_VALID_VIS_TYPES = ["derived", "table", "remote"]
+      LIST_VALID_ORDER_COLS = ["updated_at", "name", "description", "source", "likes"]
 
       def show
         render_jsonp(to_json(@visualization))
@@ -249,6 +252,59 @@ module Carto
 
         render :json => '{"visualizations":' + layers.to_json + ' ,"total_entries":' + layers.size.to_s + '}'
       end
+
+      def list
+        user_id = current_user.id
+        types = params.fetch(:types, Array.new).split(',')
+        types.delete_if {|e| !LIST_VALID_VIS_TYPES.include? e }
+        types = ['derived'] if types.empty?
+        types.map!{ |e| "'" + e + "'" }
+        typeList = types.join(",")
+        args = [user_id, user_id]
+
+        sharedEmptyDatasetCondition = ''
+        if current_user[:username] != Cartodb.config[:common_data]['username']
+          sharedEmptyDatasetCondition = " AND v.name <> '#{Cartodb.config[:shared_empty_dataset_name]}'"
+        end
+        likedCondition = params.fetch(:only_liked, 'false') == 'true' ? ' AND likes > 0' : ''
+        lockedCondition = params.fetch(:locked, 'false') == 'true' ? ' AND locked=true' : ''
+        categoryCondition = ''
+        parent_category = params.fetch(:parent_category, nil)
+        if parent_category != nil
+          categoryCondition = "AND category = ? OR category = ANY(get_viz_child_category_ids(?))"
+          args += [parent_category, parent_category]
+        end
+
+        order = params.fetch(:order, '')
+        if !LIST_VALID_ORDER_COLS.include? order
+          order = 'name'
+        end
+
+        orderDir = params.fetch(:asc_order, 'false') == 'true' ? 'ASC' : 'DESC'
+
+        viz_list = Sequel::Model.db.fetch("
+            SELECT * FROM (
+              SELECT results.*, (SELECT COUNT(*) FROM likes WHERE actor=? AND subject=results.id) AS likes FROM (
+                SELECT v.id, v.type, v.name, v.display_name, v.description, v.tags, v.category, v.source, v.updated_at, v.locked, upper(v.privacy) AS privacy, ut.id AS table_id, ut.name_alias, edis.id IS NOT NULL AS from_external_source
+                  FROM visualizations AS v
+                      LEFT JOIN external_sources AS es ON es.visualization_id = v.id
+                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
+                      LEFT JOIN user_tables AS ut ON ut.map_id=v.map_id
+                      LEFT JOIN synchronizations AS s ON s.visualization_id = v.id
+                      LEFT JOIN external_data_imports AS edis ON edis.synchronization_id = s.id
+                  WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{lockedCondition} #{sharedEmptyDatasetCondition}
+                ) AS results
+              WHERE 1=1 #{categoryCondition}
+            ) AS results2
+            WHERE 1=1 #{likedCondition}
+            ORDER BY #{order} #{orderDir}",
+            *args
+          ).all
+
+        render :json => '{"visualizations":' + viz_list.to_json + ' ,"total_entries":' + viz_list.count.to_s + '}'
+      end
+
+
 
       private
 
