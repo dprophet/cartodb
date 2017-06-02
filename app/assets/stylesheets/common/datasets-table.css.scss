@@ -31,7 +31,7 @@ $bannedColor: #E1A7A5;
     padding: 0px 6px;
 
     .DatasetTitle-link {
-      border-bottom: 1px $Grey2 dotted;
+      border-bottom: 1px $nGrey4 dotted;
     }
 
     .EditableField.is-editing .EditableField-input {
@@ -56,15 +56,15 @@ $bannedColor: #E1A7A5;
 }
 
 .DatasetsTableHeader {
-  background: $DarkGrey5;
+  background: $nGrey15;
   .DatasetsTableCell.sortable:hover {
-    background: $DarkGrey3;
+    background: $nGrey14;
   }
 }
 
 .DatasetsTableHeaderContainer
 {
-  background: $DarkGrey5;
+  background: $nGrey15;
   &.padded {
     padding-right: 12px;
   }
