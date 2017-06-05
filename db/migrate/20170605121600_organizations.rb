@@ -1,5 +1,5 @@
 Sequel.migration do
-  change do
+  up do
     alter_table :organizations do
       set_column_default :geocoding_block_price, 0
       set_column_default :geocoding_quota, 2000000000
@@ -8,7 +8,7 @@ Sequel.migration do
   down do
     alter_table :organizations do
       set_column_default :geocoding_block_price, nil
-      set_column_default :geocoding_quota, nil
+      set_column_default :geocoding_quota, 0
     end
   end
 end
