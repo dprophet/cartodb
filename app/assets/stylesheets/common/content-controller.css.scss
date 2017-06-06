@@ -28,8 +28,10 @@
       }
     }
     .found-sub {
-      font-weight: bold;
-      color: $nGrey1;
+      border-radius: 2px;
+      background: $nYellow5;
+      color: $Black;      
+      padding: 0px 2px;
     }
     &.is-hidden {
       display: none;
