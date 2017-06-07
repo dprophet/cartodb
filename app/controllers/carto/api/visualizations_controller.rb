@@ -17,7 +17,7 @@ module Carto
       include VisualizationsControllerHelper
 
       ssl_required :index, :show
-      ssl_allowed  :vizjson2, :vizjson3, :likes_count, :likes_list, :is_liked, :list_watching, :static_map, :search
+      ssl_allowed  :vizjson2, :vizjson3, :likes_count, :likes_list, :is_liked, :list_watching, :static_map, :search, :list, :subcategories
 
       # TODO: compare with older, there seems to be more optional authentication endpoints
       skip_before_filter :api_authorization_required, only: [:index, :vizjson2, :vizjson3, :is_liked, :static_map]
@@ -31,6 +31,9 @@ module Carto
 
       rescue_from Carto::LoadError, with: :rescue_from_carto_error
       rescue_from Carto::UUIDParameterFormatError, with: :rescue_from_carto_error
+
+      LIST_VALID_VIS_TYPES = ["derived", "table", "remote"]
+      LIST_VALID_ORDER_COLS = ["updated_at", "name", "description", "source", "likes"]
 
       def show
         render_jsonp(to_json(@visualization))
@@ -62,6 +65,8 @@ module Carto
             hideSharedEmptyDataset = true
           end
         end
+        parent_category = params.fetch('parent_category', -1)
+        asc_order = params.fetch('asc_order', 'false')
 
         presenter_cache = Carto::Api::PresenterCache.new
 
@@ -69,8 +74,12 @@ module Carto
           # TODO: undesirable table hardcoding, needed for disambiguation. Look for
           # a better approach and/or move it to the query builder
           excludedNames = [emptyDatasetName]
+          query = vqb.with_order("visualizations.#{order}", asc_order == 'true' ? :asc : :desc).with_excluded_names(excludedNames)
+          if parent_category != -1
+            query = query.with_parent_category(parent_category.to_i)
+          end
           response = {
-            visualizations: vqb.with_order("visualizations.#{order}", :desc).with_excluded_names(excludedNames).build_paged(page, per_page).map { |v|
+            visualizations: query.build_paged(page, per_page).map { |v|
                 VisualizationPresenter.new(v, current_viewer, self, { related: false }).with_presenter_cache(presenter_cache).to_poro
             },
             total_entries: vqb.build.count
@@ -86,8 +95,12 @@ module Carto
         else
           # TODO: undesirable table hardcoding, needed for disambiguation. Look for
           # a better approach and/or move it to the query builder
+          query = vqb.with_order("visualizations.#{order}", asc_order == 'true' ? :asc : :desc)
+          if parent_category != -1
+            query = query.with_parent_category(parent_category.to_i)
+          end
           response = {
-            visualizations: vqb.with_order("visualizations.#{order}", :desc).build_paged(page, per_page).map { |v|
+            visualizations: query.build_paged(page, per_page).map { |v|
                 VisualizationPresenter.new(v, current_viewer, self, { related: false }).with_presenter_cache(presenter_cache).to_poro
             },
             total_entries: vqb.build.count
@@ -163,6 +176,40 @@ module Carto
         redirect_to Carto::StaticMapsURLHelper.new.url_for_static_map(request, @visualization, map_width, map_height)
       end
 
+      def subcategories
+        categoryId = params[:category_id]
+        counts = params[:counts]
+
+        if counts == 'true'
+          categories = Sequel::Model.db.fetch("
+            SELECT categories.*,
+              (SELECT COUNT(*) FROM visualizations
+                LEFT JOIN external_sources es ON es.visualization_id = visualizations.id
+                LEFT JOIN external_data_imports edi
+                  ON edi.external_source_id = es.id
+                    AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
+                    AND edi.synchronization_id IS NOT NULL
+            WHERE user_id=? AND
+              edi.id IS NULL AND
+              (type = 'table' OR type = 'remote') AND
+              (category = categories.id OR category = ANY(get_viz_child_category_ids(categories.id)))) AS count FROM
+                (SELECT id, name, parent_id, list_order FROM visualization_categories
+                    WHERE id = ANY(get_viz_child_category_ids(?))
+                    ORDER BY parent_id, list_order, name) AS categories;",
+              current_user.id, categoryId
+            ).all
+        else
+          categories = Sequel::Model.db.fetch("
+            SELECT id, name, parent_id, list_order, -1 AS count FROM visualization_categories
+              WHERE id = ANY(get_viz_child_category_ids(?))
+              ORDER BY parent_id, list_order, name",
+              categoryId
+            ).all
+        end
+
+        render :json => categories.to_json
+      end
+
       def search
         username = current_user.username
         query = params[:q]
@@ -205,6 +252,58 @@ module Carto
 
         render :json => '{"visualizations":' + layers.to_json + ' ,"total_entries":' + layers.size.to_s + '}'
       end
+
+      def list
+        user_id = current_user.id
+        types = params.fetch(:types, Array.new).split(',')
+        types.delete_if {|e| !LIST_VALID_VIS_TYPES.include? e }
+        types = ['derived'] if types.empty?
+        types.map!{ |e| "'" + e + "'" }
+        typeList = types.join(",")
+        args = [user_id, user_id]
+
+        sharedEmptyDatasetCondition = ''
+        if current_user[:username] != Cartodb.config[:common_data]['username']
+          sharedEmptyDatasetCondition = "AND v.name <> '#{Cartodb.config[:shared_empty_dataset_name]}'"
+        end
+        likedCondition = params.fetch(:only_liked, 'false') == 'true' ? 'WHERE likes > 0' : ''
+        lockedCondition = params.fetch(:locked, 'false') == 'true' ? 'AND locked=true' : ''
+        categoryCondition = ''
+        parent_category = params.fetch(:parent_category, nil)
+        if parent_category != nil
+          categoryCondition = "AND (v.category = ? OR v.category = ANY(get_viz_child_category_ids(?)))"
+          args += [parent_category, parent_category]
+        end
+
+        order = params.fetch(:order, '')
+        if !LIST_VALID_ORDER_COLS.include? order
+          order = 'name'
+        end
+
+        orderDir = params.fetch(:asc_order, 'false') == 'true' ? 'ASC' : 'DESC'
+
+        viz_list = Sequel::Model.db.fetch("
+            SELECT * FROM (
+              SELECT results.*, (SELECT COUNT(*) FROM likes WHERE actor=? AND subject=results.id) AS likes FROM (
+                SELECT v.id, v.type, v.name, v.display_name, v.description, v.tags, v.category, v.source, v.updated_at, v.locked, upper(v.privacy) AS privacy, ut.id AS table_id, ut.name_alias, edis.id IS NOT NULL AS from_external_source
+                  FROM visualizations AS v
+                      LEFT JOIN external_sources AS es ON es.visualization_id = v.id
+                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
+                      LEFT JOIN user_tables AS ut ON ut.map_id=v.map_id
+                      LEFT JOIN synchronizations AS s ON s.visualization_id = v.id
+                      LEFT JOIN external_data_imports AS edis ON edis.synchronization_id = s.id
+                  WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{lockedCondition} #{sharedEmptyDatasetCondition} #{categoryCondition}
+                ) AS results
+            ) AS results2
+            #{likedCondition}
+            ORDER BY #{order} #{orderDir}",
+            *args
+          ).all
+
+        render :json => '{"visualizations":' + viz_list.to_json + ' ,"total_entries":' + viz_list.count.to_s + '}'
+      end
+
+
 
       private
 

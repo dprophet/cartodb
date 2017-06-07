@@ -161,6 +161,9 @@ module CartoDB
           data = JSON.parse(response.response_body)
           table_visualization_map_id = data['table_visualization']['map_id']
 
+          table.name_alias = data['name_alias']
+          table.column_aliases = data['column_aliases']
+
           url = "#{remote_base_url}/api/v1/maps/#{table_visualization_map_id}"
           response = http_client.get(url, params: {
             api_key: remote_api_key
@@ -181,8 +184,8 @@ module CartoDB
           table.map.view_bounds_ne = data['view_bounds_ne']
           table.map.legends = data['legends']
           table.map.scrollwheel = data['scrollwheel']
-          table.map.save
-          
+          table.save
+
           # Get remote vis layer configs
           url = "#{remote_base_url}/api/v1/maps/#{table_visualization_map_id}/layers"
           response = http_client.get(url, params: {
