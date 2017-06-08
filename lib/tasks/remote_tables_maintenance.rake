@@ -223,6 +223,44 @@ namespace :cartodb do
       }
     end
 
+    desc "Sync dataset description and source set in Data Library to all users"
+    task :sync_dataset_desc_and_source, [:dataset_name] => [:environment] do |t, args|
+      require_relative '../../app/helpers/common_data_redis_cache'
+      require_relative '../../app/services/visualization/common_data_service'
+
+      name = args[:dataset_name]
+      common_data_user = Cartodb.config[:common_data]["username"]
+
+      lib_datasets = Hash[
+        Rails::Sequel.connection.fetch(%Q[
+          SELECT name, description, source FROM visualizations WHERE
+            user_id=(SELECT id FROM users WHERE username='#{common_data_user}')
+            AND type='remote' AND name='#{name}';
+        ]).all.map { |row| [row.fetch(:name), {:description => row.fetch(:description), :source => row.fetch(:source)}] }
+      ]
+
+      if lib_datasets.count == 1
+        dataset = lib_datasets[name]
+        description = dataset[:description]
+        source = dataset[:source]
+        sql_query = %Q[
+          UPDATE visualizations SET description='#{description}', source='#{source}'
+          WHERE id IN (
+            SELECT v.id FROM visualizations AS v
+              LEFT JOIN synchronizations AS s ON s.visualization_id=v.id
+              LEFT JOIN external_data_imports AS edi ON edi.synchronization_id=s.id
+            WHERE v.name='#{name}' AND v.type='table' AND edi.id IS NOT NULL AND
+            v.user_id<>(SELECT id FROM users WHERE username='#{common_data_user}')
+          );
+        ]
+        updated_rows = Rails::Sequel.connection.fetch(sql_query).update
+        CommonDataRedisCache.new.invalidate
+        puts "#{updated_rows} datasets named '#{name}' assigned description '#{description}' and source '#{source}'"
+      else
+        puts "Error! Dataset not found..."
+      end
+    end
+
     def get_visualizations_api_url
       common_data_config = Cartodb.config[:common_data]
       username = common_data_config["username"]
