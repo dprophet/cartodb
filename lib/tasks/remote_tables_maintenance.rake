@@ -261,6 +261,80 @@ namespace :cartodb do
       end
     end
 
+    desc "Sync dataset description, source, category, exportability and aliases set in Data Library to all users"
+    task :sync_dataset_props, [:dataset_name] => [:environment] do |t, args|
+      require_relative '../../app/helpers/common_data_redis_cache'
+      require_relative '../../app/services/visualization/common_data_service'
+
+      name = args[:dataset_name]
+      common_data_user = Cartodb.config[:common_data]["username"]
+      lib_datasets = {}
+
+      Rails::Sequel.connection.fetch(%Q[
+        SELECT v.name, v.description, v.source, v.category, vc.name AS category_name, v.exportable, v.export_geom, ut.name_alias, ut.column_aliases
+          FROM visualizations AS v
+          LEFT JOIN user_tables AS ut ON ut.map_id=v.map_id
+          LEFT JOIN visualization_categories AS vc ON vc.id=v.category
+        WHERE v.user_id=(SELECT id FROM users WHERE username='#{common_data_user}')
+          AND v.type='table' AND v.privacy='public' AND v.name='#{name}';
+      ]).each { |row|
+        lib_datasets[row.fetch(:name)] = {
+          :description => row.fetch(:description), :source => row.fetch(:source),
+          :category => row.fetch(:category), :category_name => row.fetch(:category_name),
+          :exportable => row.fetch(:exportable), :export_geom => row.fetch(:export_geom),
+          :name_alias => row.fetch(:name_alias), :column_aliases => row.fetch(:column_aliases)
+        }
+      }
+
+      if lib_datasets.count == 1
+        dataset = lib_datasets[name]
+        description = dataset[:description]
+        source = dataset[:source]
+        category = dataset[:category]
+        category_name = dataset[:category_name]
+        exportable = dataset[:exportable]
+        export_geom = dataset[:export_geom]
+        name_alias = dataset[:name_alias]
+        column_aliases = dataset[:column_aliases]
+        if column_aliases == nil
+          column_aliases = {}
+        end
+
+        # only update datasets with same name and imported from library, skip library user
+        sql_query = %Q[
+          UPDATE visualizations SET description='#{description}', source='#{source}', category=#{category}, exportable=#{exportable}, export_geom=#{export_geom}
+          WHERE id IN (
+            SELECT v.id FROM visualizations AS v
+              LEFT JOIN synchronizations AS s ON s.visualization_id=v.id
+              LEFT JOIN external_data_imports AS edi ON edi.synchronization_id=s.id
+            WHERE v.name='#{name}' AND v.type='table' AND edi.id IS NOT NULL AND
+              v.user_id<>(SELECT id FROM users WHERE username='#{common_data_user}')
+          );
+        ]
+        updated_rows = Rails::Sequel.connection.fetch(sql_query).update
+        puts "#{updated_rows} '#{name}' datasets set description: '#{description}', source: '#{source}', category: '#{category_name}' (#{category}), exportable: #{exportable}, export_geom: #{export_geom}"
+
+        # only update dataset tables with same name and imported from library, skip library user
+        sql_query = %Q[
+          UPDATE user_tables SET name_alias='#{name_alias}', column_aliases='#{column_aliases}'::json
+          WHERE id IN (
+            SELECT ut.id FROM user_tables AS ut
+              LEFT JOIN visualizations AS v ON v.map_id=ut.map_id
+              LEFT JOIN synchronizations AS s ON s.visualization_id=v.id
+              LEFT JOIN external_data_imports AS edi ON edi.synchronization_id=s.id
+            WHERE ut.name='#{name}' AND edi.id IS NOT NULL AND ut.user_id<>(SELECT id FROM users WHERE username='#{common_data_user}')
+          );
+        ]
+
+        updated_rows = Rails::Sequel.connection.fetch(sql_query).update
+        puts "#{updated_rows} '#{name}' datasets set name_alias: '#{name_alias}', column_aliases: '#{column_aliases}'"
+
+        CommonDataRedisCache.new.invalidate
+      else
+        puts "Error! Dataset not found..."
+      end
+    end
+
     def get_visualizations_api_url
       common_data_config = Cartodb.config[:common_data]
       username = common_data_config["username"]
