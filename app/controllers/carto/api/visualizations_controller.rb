@@ -303,6 +303,62 @@ module Carto
         render :json => '{"visualizations":' + viz_list.to_json + ' ,"total_entries":' + viz_list.count.to_s + '}'
       end
 
+      def count
+        user_id = current_user.id
+        type = params.fetch(:type, 'datasets')
+        typeList = (type == 'datasets') ? "'table','remote'" : "'derived'"
+
+        sharedEmptyDatasetCondition = ''
+        if current_user[:username] != Cartodb.config[:common_data]['username']
+          sharedEmptyDatasetCondition = "AND v.name <> '#{Cartodb.config[:shared_empty_dataset_name]}'"
+        end
+
+        type_counts = Sequel::Model.db.fetch("
+            SELECT
+              COUNT(*) AS all,
+              SUM(CASE WHEN likes > 0 THEN 1 ELSE 0 END) AS liked,
+              SUM(CASE WHEN locked=true THEN 1 ELSE 0 END) AS locked,
+              SUM(CASE WHEN type='table' THEN 1 ELSE 0 END) AS imported
+            FROM (
+              SELECT results.*, (SELECT COUNT(*) FROM likes WHERE actor=? AND subject=results.id) AS likes FROM (
+                SELECT v.id, v.type, v.category, v.locked
+                  FROM visualizations AS v
+                      LEFT JOIN external_sources AS es ON es.visualization_id = v.id
+                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
+                  WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition}
+                ) AS results
+            ) AS results2
+            ",
+            user_id, user_id
+          ).all
+
+        category_count_list = Sequel::Model.db.fetch("
+            SELECT categories.id, categories.parent_id, (SELECT COUNT(*) FROM (
+              SELECT v.id FROM visualizations AS v
+                LEFT JOIN external_sources AS es ON es.visualization_id = v.id
+                LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
+              WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition} AND v.category=categories.id) AS viz_list) AS count
+            FROM (SELECT id, parent_id FROM visualization_categories) AS categories
+            ",
+            user_id
+          ).all
+
+        category_counts = Hash.new
+
+        category_count_list.each do |item|
+          category_counts[item[:id]] = item[:count]
+        end
+
+        category_count_list.each do |item|
+          parent_id = item[:parent_id]
+          if category_counts.key?(parent_id)
+            category_counts[parent_id] += item[:count]
+          end
+        end
+
+        render :json => '{"types":' + type_counts[0].to_json + ' ,"categories":' + category_counts.to_json + '}'
+      end
+
 
 
       private
