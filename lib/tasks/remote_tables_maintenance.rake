@@ -299,35 +299,35 @@ namespace :cartodb do
         column_aliases = dataset[:column_aliases] || {}
 
         # only update datasets with same name and imported from library, skip library user
-        vis_ids = Carto::Visualization.includes({:synchronization => :external_data_imports})
+        vis_ids = Carto::Visualization.includes(synchronization: :external_data_imports)
           .where(type: 'table', name: name)
           .where('external_data_imports.id IS NOT NULL')
           .where('visualizations.user_id <> ?', common_data_user.id)
           .select('visualizations.id')
           .all
 
-        if !vis_ids.empty?
-          updated_rows = Carto::Visualization.where(:id => vis_ids)
-                          .update_all(:description => description, :source => source, :category => category, :exportable => exportable, :export_geom => export_geom)
-          puts "#{updated_rows} '#{name}' datasets set description: '#{description}', source: '#{source}', category: '#{category_name}' (#{category}), exportable: #{exportable}, export_geom: #{export_geom}"
-        else
+        if vis_ids.empty?
           puts "Warning! No datasets with name '#{name}' found in user accounts"
+        else
+          updated_rows = Carto::Visualization.where(id: vis_ids)
+                          .update_all(description: description, source: source, category: category, exportable: exportable, export_geom: export_geom)
+          puts "#{updated_rows} '#{name}' datasets set description: '#{description}', source: '#{source}', category: '#{category_name}' (#{category}), exportable: #{exportable}, export_geom: #{export_geom}"
         end
 
         # only update dataset tables with same name and imported from library, skip library user
-        ut_ids = Carto::UserTable.includes({:visualization => {:synchronization => :external_data_imports}})
+        ut_ids = Carto::UserTable.includes(visualization: { synchronization: :external_data_imports })
           .where(name: name)
           .where('external_data_imports.id IS NOT NULL')
           .where('user_tables.user_id <> ?', common_data_user.id)
           .select('user_tables.id')
           .all
 
-        if !ut_ids.empty?
-          updated_rows = Carto::UserTable.where(:id => ut_ids)
-                          .update_all(:name_alias => name_alias, :column_aliases => column_aliases.to_json)
-          puts "#{updated_rows} '#{name}' datasets set name_alias: '#{name_alias}', column_aliases: '#{column_aliases}'"
-        else
+        if ut_ids.empty?
           puts "Warning! No user tables with name '#{name}' found in user accounts"
+        else
+          updated_rows = Carto::UserTable.where(id: ut_ids)
+                          .update_all(name_alias: name_alias, column_aliases: column_aliases.to_json)
+          puts "#{updated_rows} '#{name}' datasets set name_alias: '#{name_alias}', column_aliases: '#{column_aliases}'"
         end
       else
         puts "Error! No dataset with name '#{name}' found in common-data account"
