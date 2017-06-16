@@ -263,8 +263,9 @@ namespace :cartodb do
 
     desc "Sync dataset description, source, category, exportability and aliases set in Data Library to all users"
     task :sync_dataset_props, [:dataset_name] => [:environment] do |t, args|
-      require_relative '../../app/helpers/common_data_redis_cache'
-      require_relative '../../app/services/visualization/common_data_service'
+      if ENV['verbose'] != "true"
+        ActiveRecord::Base.logger = nil
+      end
 
       name = args[:dataset_name]
       common_data_username = Cartodb.config[:common_data]["username"]
@@ -295,35 +296,41 @@ namespace :cartodb do
         exportable = dataset[:exportable]
         export_geom = dataset[:export_geom]
         name_alias = dataset[:name_alias]
-        column_aliases = dataset[:column_aliases]
-        column_aliases ||= {}
+        column_aliases = dataset[:column_aliases] || {}
 
         # only update datasets with same name and imported from library, skip library user
-        @vis_ids = Carto::Visualization.includes({:synchronization => :external_data_imports})
+        vis_ids = Carto::Visualization.includes({:synchronization => :external_data_imports})
           .where(type: 'table', name: name)
           .where('external_data_imports.id IS NOT NULL')
           .where('visualizations.user_id <> ?', common_data_user.id)
           .select('visualizations.id')
           .all
 
-        updated_rows = Carto::Visualization.where(:id => @vis_ids)
-                        .update_all(:description => description, :source => source, :category => category, :exportable => exportable, :export_geom => export_geom)
-        puts "#{updated_rows} '#{name}' datasets set description: '#{description}', source: '#{source}', category: '#{category_name}' (#{category}), exportable: #{exportable}, export_geom: #{export_geom}"
+        if !vis_ids.empty?
+          updated_rows = Carto::Visualization.where(:id => vis_ids)
+                          .update_all(:description => description, :source => source, :category => category, :exportable => exportable, :export_geom => export_geom)
+          puts "#{updated_rows} '#{name}' datasets set description: '#{description}', source: '#{source}', category: '#{category_name}' (#{category}), exportable: #{exportable}, export_geom: #{export_geom}"
+        else
+          puts "Warning! No datasets with name '#{name}' found in user accounts"
+        end
 
         # only update dataset tables with same name and imported from library, skip library user
-        @ut_ids = Carto::UserTable.includes({:visualization => {:synchronization => :external_data_imports}})
+        ut_ids = Carto::UserTable.includes({:visualization => {:synchronization => :external_data_imports}})
           .where(name: name)
           .where('external_data_imports.id IS NOT NULL')
           .where('user_tables.user_id <> ?', common_data_user.id)
           .select('user_tables.id')
           .all
-        updated_rows = Carto::UserTable.where(:id => @ut_ids)
-                        .update_all(:name_alias => name_alias, :column_aliases => column_aliases.to_json)
-        puts "#{updated_rows} '#{name}' datasets set name_alias: '#{name_alias}', column_aliases: '#{column_aliases}'"
 
-        CommonDataRedisCache.new.invalidate
+        if !ut_ids.empty?
+          updated_rows = Carto::UserTable.where(:id => ut_ids)
+                          .update_all(:name_alias => name_alias, :column_aliases => column_aliases.to_json)
+          puts "#{updated_rows} '#{name}' datasets set name_alias: '#{name_alias}', column_aliases: '#{column_aliases}'"
+        else
+          puts "Warning! No user tables with name '#{name}' found in user accounts"
+        end
       else
-        puts "Error! Dataset not found..."
+        puts "Error! No dataset with name '#{name}' found in common-data account"
       end
     end
 
