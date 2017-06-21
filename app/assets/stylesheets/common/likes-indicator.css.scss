@@ -18,7 +18,7 @@ $cLiked: #D93F56;
 .LikesIndicator-icon {
   width: 13px;
   height: 13px;
-  background-image: url('../images/favorite_off.svg');
+  background-image: url('../images/favorite_disabled.svg');
   background-repeat: no-repeat;
 }
 .LikesIndicator-icon.LikesIndicator-icon--big {
@@ -26,6 +26,9 @@ $cLiked: #D93F56;
 }
 .LikesIndicator.is-likeable {
   cursor: pointer;
+  .LikesIndicator-icon {
+    background-image: url('../images/favorite_off.svg');
+  }
 }
 .LikesIndicator.is-likeable:hover {
   color: $cTypography-paragraphs;

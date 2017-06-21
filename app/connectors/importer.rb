@@ -270,14 +270,14 @@ module CartoDB
 
         if data_import
           user_id = data_import.user_id
-          if exists_user_table_for_user_id(new_name, user_id)
+          if exists_table_name(new_name, user_id)
             # Since get_valid_table_name should only return nonexisting table names (with a retry limit)
             # this is likely caused by a table deletion, so we run ghost tables to cleanup and retry
             if rename_attempts == 1
               runner.log.append("Triggering ghost tables for #{user_id} because collision on #{new_name}")
               ::User.where(id: user_id).first.link_ghost_tables
 
-              if exists_user_table_for_user_id(new_name, user_id)
+              if exists_table_name(new_name, user_id)
                 runner.log.append("Ghost tables didn't fix the collision.")
                 raise "Existing #{new_name} already registered for #{user_id}. Running ghost tables did not help."
               else
@@ -359,6 +359,18 @@ module CartoDB
 
       def exists_user_table_for_user_id(table_name, user_id)
         !Carto::UserTable.where(name: table_name, user_id: user_id).first.nil?
+      end
+
+      def exists_table_name(table_name, user_id)
+        if exists_user_table_for_user_id(table_name, user_id)
+          return true
+        end
+
+        common_data_username = Cartodb.config[:common_data]["username"]
+        common_data_user = Carto::User.find_by_username(common_data_username)
+
+        !Carto::Visualization.where(user_id: common_data_user.id, type: 'table',
+                                    privacy: 'public', name: table_name).first.nil?
       end
 
       attr_reader :runner, :table_registrar, :quota_checker, :database, :data_import_id

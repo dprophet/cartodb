@@ -1463,6 +1463,12 @@ class Table
     existing_names = []
     existing_names = options[:name_candidates] || options[:connection]["select relname from pg_stat_user_tables WHERE schemaname='#{database_schema}'"].map(:relname) if options[:connection]
     existing_names = existing_names + SYSTEM_TABLE_NAMES
+
+    common_data_username = Cartodb.config[:common_data]["username"]
+    common_data_user = Carto::User.find_by_username(common_data_username)
+    lib_names = Carto::Visualization.where(user_id: common_data_user.id, type: 'table', privacy: 'public').select(:name).map { |row| row.name }
+    existing_names += lib_names
+
     rx = /_(\d+)$/
     count = name[rx][1].to_i rescue 0
     while existing_names.include?(name)
