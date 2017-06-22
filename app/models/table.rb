@@ -1466,7 +1466,7 @@ class Table
 
     common_data_username = Cartodb.config[:common_data]["username"]
     common_data_user = Carto::User.find_by_username(common_data_username)
-    lib_names = Carto::Visualization.where(user_id: common_data_user.id, type: 'table', privacy: 'public').select(:name).map { |row| row.name }
+    lib_names = common_data_user.visualizations.where(type: 'table', privacy: 'public').select(:name).map { |row| row.name }
     existing_names += lib_names
 
     rx = /_(\d+)$/

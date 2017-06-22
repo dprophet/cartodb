@@ -117,11 +117,11 @@ module Carto
         end
 
         if response[:visualizations].empty? && q != ''
-          common_data_username = Cartodb.config[:common_data]["username"]
-          common_data_user = Carto::User.find_by_username(common_data_username)
-          lib_datasets = Carto::Visualization.where(user_id: common_data_user.id, type: 'table', privacy: 'public', name: q).map { |v|
-            VisualizationPresenter.new(v, current_viewer, self, { related: false }).with_presenter_cache(presenter_cache).to_poro
-          }
+          lib_datasets = common_data_user.visualizations.where(type: 'table', privacy: 'public', name: q).map do |v|
+            VisualizationPresenter.new(v, current_viewer, self, { related: false })
+              .with_presenter_cache(presenter_cache)
+              .to_poro
+          end
           lib_datasets.each do |dataset|
             dataset[:type] = 'remote'
             dataset[:needs_cd_import] = true
@@ -277,10 +277,7 @@ module Carto
         typeList = types.join(",")
         only_liked = params.fetch(:only_liked, 'false') == 'true'
         only_locked = params.fetch(:locked, 'false') == 'true'
-
-        common_data_username = Cartodb.config[:common_data]['username']
-        is_common_data_user = current_user[:username] == common_data_username
-        union_common_data = !is_common_data_user && !((types.exclude? "'remote'") || only_liked || only_locked)
+        is_common_data_user = user_id == common_data_user.id
 
         args = [user_id, user_id]
 
@@ -294,11 +291,11 @@ module Carto
           args += [parent_category, parent_category]
         end
 
+        union_common_data = !is_common_data_user && !((types.exclude? "'remote'") || only_liked || only_locked)
+
         if union_common_data
           args += [user_id]
-          if parent_category != nil
-            args += [parent_category, parent_category]
-          end
+          args += [parent_category, parent_category] if parent_category
         end
 
         order = params.fetch(:order, '')
@@ -325,14 +322,10 @@ module Carto
 
         if union_common_data
           query += "UNION
-            SELECT * FROM (
-                SELECT results.*, 0 AS likes FROM (
-                  SELECT v.id, 'remote' AS type, true AS needs_cd_import, v.name, v.display_name, v.description, v.tags, v.category, v.source, v.updated_at, v.locked, upper(v.privacy) AS privacy, ut.id AS table_id, ut.name_alias, true AS from_external_source
-                    FROM visualizations AS v
-                        LEFT JOIN user_tables AS ut ON ut.map_id=v.map_id
-                    WHERE v.user_id=(SELECT id FROM users WHERE username='#{common_data_username}') AND v.type='table' AND v.privacy='public' AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id=? AND type IN (#{typeList})) #{sharedEmptyDatasetCondition} #{categoryCondition}
-                  ) AS results
-              ) AS results2"
+            SELECT v.id, 'remote' AS type, true AS needs_cd_import, v.name, v.display_name, v.description, v.tags, v.category, v.source, v.updated_at, v.locked, 'PUBLIC' AS privacy, ut.id AS table_id, ut.name_alias, true AS from_external_source, 0 AS likes
+              FROM visualizations AS v
+                LEFT JOIN user_tables AS ut ON ut.map_id=v.map_id
+              WHERE v.user_id='#{common_data_user.id}' AND v.type='table' AND v.privacy='public' AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id=? AND type IN (#{typeList})) #{sharedEmptyDatasetCondition} #{categoryCondition}"
         end
 
         query += " ORDER BY #{order} #{orderDir}"
@@ -347,8 +340,7 @@ module Carto
         type = params.fetch(:type, 'datasets')
         typeList = (type == 'datasets') ? "'table','remote'" : "'derived'"
 
-        common_data_username = Cartodb.config[:common_data]['username']
-        is_common_data_user = current_user[:username] == common_data_username
+        is_common_data_user = user_id == common_data_user.id
         union_common_data = !is_common_data_user && (type == 'datasets')
 
         sharedEmptyDatasetCondition = is_common_data_user ? "" : "AND v.name <> '#{Cartodb.config[:shared_empty_dataset_name]}'"
@@ -372,7 +364,7 @@ module Carto
           query += " UNION
                     SELECT v.id, 'remote' AS type, v.category, false AS locked, 0 AS likes
                       FROM visualizations AS v
-                      WHERE v.user_id=(SELECT id FROM users WHERE username='#{common_data_username}') AND v.type='table' AND v.privacy='public' AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id=? AND type IN (#{typeList})) #{sharedEmptyDatasetCondition}
+                      WHERE v.user_id='#{common_data_user.id}' AND v.type='table' AND v.privacy='public' AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id=? AND type IN (#{typeList})) #{sharedEmptyDatasetCondition}
                     "
           args += [user_id]
         end
@@ -391,7 +383,7 @@ module Carto
                 WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition} AND v.category=categories.id) AS viz_list) +
               (SELECT COUNT(*) FROM (
                 SELECT v.id FROM visualizations AS v
-                WHERE v.user_id=(SELECT id FROM users WHERE username='#{common_data_username}') AND v.type='table' AND v.privacy='public' AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id='#{user_id}' AND type IN (#{typeList})) #{sharedEmptyDatasetCondition} AND v.category=categories.id) AS viz_list)
+                WHERE v.user_id='#{common_data_user.id}' AND v.type='table' AND v.privacy='public' AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id='#{user_id}' AND type IN (#{typeList})) #{sharedEmptyDatasetCondition} AND v.category=categories.id) AS viz_list)
               )
               AS count
               FROM (SELECT id, parent_id FROM visualization_categories) AS categories
