@@ -73,7 +73,6 @@ module CartoDB
       def register(result)
         @support_tables_helper.reset
 
-
         if runner.instance_of? CartoDB::Importer2::CDBDataLibraryConnector
           name = result.name
         else

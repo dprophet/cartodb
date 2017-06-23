@@ -294,8 +294,10 @@ module Carto
         union_common_data = !is_common_data_user && !((types.exclude? "'remote'") || only_liked || only_locked)
 
         if union_common_data
+          if parent_category != nil
+            args += [parent_category, parent_category]
+          end
           args += [user_id]
-          args += [parent_category, parent_category] if parent_category
         end
 
         order = params.fetch(:order, '')
@@ -311,21 +313,22 @@ module Carto
                 SELECT v.id, v.type, false AS needs_cd_import, v.name, v.display_name, v.description, v.tags, v.category, v.source, v.updated_at, v.locked, upper(v.privacy) AS privacy, ut.id AS table_id, ut.name_alias, edis.id IS NOT NULL AS from_external_source
                   FROM visualizations AS v
                       LEFT JOIN external_sources AS es ON es.visualization_id = v.id
-                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
+                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id
+                      LEFT JOIN data_imports AS di ON di.id = edi.data_import_id AND di.state <> 'failure'
                       LEFT JOIN user_tables AS ut ON ut.map_id=v.map_id
                       LEFT JOIN synchronizations AS s ON s.visualization_id = v.id
                       LEFT JOIN external_data_imports AS edis ON edis.synchronization_id = s.id
-                  WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{lockedCondition} #{sharedEmptyDatasetCondition} #{categoryCondition}
+                  WHERE di.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{lockedCondition} #{sharedEmptyDatasetCondition} #{categoryCondition}
                 ) AS results
             ) AS results2
             #{likedCondition}"
 
         if union_common_data
-          query += "UNION
+          query += "UNION ALL
             SELECT v.id, 'remote' AS type, true AS needs_cd_import, v.name, v.display_name, v.description, v.tags, v.category, v.source, v.updated_at, v.locked, 'PUBLIC' AS privacy, ut.id AS table_id, ut.name_alias, true AS from_external_source, 0 AS likes
               FROM visualizations AS v
                 LEFT JOIN user_tables AS ut ON ut.map_id=v.map_id
-              WHERE v.user_id='#{common_data_user.id}' AND v.type='table' AND v.privacy='public' AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id=? AND type IN (#{typeList})) #{sharedEmptyDatasetCondition} #{categoryCondition}"
+              WHERE v.user_id='#{common_data_user.id}' AND v.type='table' AND v.privacy='public' #{sharedEmptyDatasetCondition} #{categoryCondition} AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id=? AND type IN (#{typeList}))"
         end
 
         query += " ORDER BY #{order} #{orderDir}"
@@ -355,16 +358,17 @@ module Carto
                 SELECT v.id, v.type, v.category, v.locked
                   FROM visualizations AS v
                       LEFT JOIN external_sources AS es ON es.visualization_id = v.id
-                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
-                  WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition}
+                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id
+                      LEFT JOIN data_imports AS di ON di.id = edi.data_import_id AND di.state <> 'failure'
+                  WHERE di.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition}
                 ) AS results"
         args = [user_id, user_id]
 
         if union_common_data
-          query += " UNION
+          query += " UNION ALL
                     SELECT v.id, 'remote' AS type, v.category, false AS locked, 0 AS likes
                       FROM visualizations AS v
-                      WHERE v.user_id='#{common_data_user.id}' AND v.type='table' AND v.privacy='public' AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id=? AND type IN (#{typeList})) #{sharedEmptyDatasetCondition}
+                      WHERE v.user_id='#{common_data_user.id}' AND v.type='table' AND v.privacy='public' #{sharedEmptyDatasetCondition} AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id=? AND type IN (#{typeList}))
                     "
           args += [user_id]
         end
@@ -372,24 +376,26 @@ module Carto
         query += ") AS results2"
         type_counts = Sequel::Model.db.fetch(query, *args).all
 
-        query = ""
-        category_count_list = Sequel::Model.db.fetch("
-            SELECT categories.id, categories.parent_id,
-              (
-              (SELECT COUNT(*) FROM (
-                SELECT v.id FROM visualizations AS v
+        query = "SELECT categories.id, categories.parent_id, (
+              (SELECT COUNT(*) FROM visualizations AS v
                   LEFT JOIN external_sources AS es ON es.visualization_id = v.id
-                  LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
-                WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition} AND v.category=categories.id) AS viz_list) +
-              (SELECT COUNT(*) FROM (
-                SELECT v.id FROM visualizations AS v
-                WHERE v.user_id='#{common_data_user.id}' AND v.type='table' AND v.privacy='public' AND v.name NOT IN (SELECT name FROM visualizations WHERE user_id='#{user_id}' AND type IN (#{typeList})) #{sharedEmptyDatasetCondition} AND v.category=categories.id) AS viz_list)
-              )
-              AS count
-              FROM (SELECT id, parent_id FROM visualization_categories) AS categories
-            ",
-            user_id
-          ).all
+                  LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id
+                  LEFT JOIN data_imports AS di ON di.id = edi.data_import_id AND di.state <> 'failure'
+                WHERE di.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition} AND v.category=categories.id) + "
+
+        if union_common_data
+          query += "(SELECT COUNT(*) FROM visualizations AS v
+                WHERE v.user_id='#{common_data_user.id}' AND v.type='table' AND v.privacy='public' #{sharedEmptyDatasetCondition} AND v.category=categories.id AND
+                  v.name NOT IN (SELECT name FROM visualizations WHERE user_id='#{user_id}' AND type IN (#{typeList})))"
+        else
+          query += "0"
+        end
+
+        query += ") AS count
+            FROM (SELECT id, parent_id FROM visualization_categories) AS categories"
+
+
+        category_count_list = Sequel::Model.db.fetch(query, user_id).all
 
         category_counts = Hash.new
 
