@@ -1082,7 +1082,10 @@ div.search-result-dropdown {
 } 
 
 .search-result-row .found-sub {
-  font-weight: bold;
+  border-radius: 2px;
+  background: $nYellow5;
+  color: $Black;
+  padding: 0px 2px;
 }
 
 // Custom styles for Leaflet maps
