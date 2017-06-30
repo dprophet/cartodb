@@ -4,6 +4,9 @@ Sequel.migration do
     execute "ALTER SEQUENCE visualization_categories_id_seq RESTART;"
     execute "UPDATE visualization_categories SET id=DEFAULT;"
 
+    execute "INSERT INTO visualization_categories (id, type, name, parent_id, list_order) VALUES
+      (-1, 1, 'UNASSIGNED', 0, 0);"
+
     execute "INSERT INTO visualization_categories (type, name, parent_id, list_order) VALUES
       (1, 'Datasets', 0, 0),
       (2, 'Maps', 0, 1);"
@@ -39,7 +42,7 @@ Sequel.migration do
 
     execute "INSERT INTO visualization_categories (type, name, parent_id, list_order) VALUES    
       (1, 'Global', 9, 0),
-      (1, 'Australia', 9, 0),
+      (1, 'Oceana', 9, 0),
       (1, 'Asia', 9, 0),
       (1, 'South America', 9, 0),
       (1, 'Europe', 9, 0),
