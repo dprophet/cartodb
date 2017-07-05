@@ -325,12 +325,11 @@ module Carto
                 SELECT v.id, v.type, false AS needs_cd_import, v.name, v.display_name, v.description, v.tags, v.category, v.source, v.updated_at, v.locked, upper(v.privacy) AS privacy, ut.id AS table_id, ut.name_alias, edis.id IS NOT NULL AS from_external_source
                   FROM visualizations AS v
                       LEFT JOIN external_sources AS es ON es.visualization_id = v.id
-                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id
-                      LEFT JOIN data_imports AS di ON di.id = edi.data_import_id AND di.state <> 'failure'
+                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
                       LEFT JOIN user_tables AS ut ON ut.map_id=v.map_id
                       LEFT JOIN synchronizations AS s ON s.visualization_id = v.id
                       LEFT JOIN external_data_imports AS edis ON edis.synchronization_id = s.id
-                  WHERE di.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{lockedCondition} #{sharedEmptyDatasetCondition} #{categoryCondition} #{tagCondition}
+                  WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{lockedCondition} #{sharedEmptyDatasetCondition} #{categoryCondition} #{tagCondition}
                 ) AS results
             ) AS results2
             #{likedCondition}"
@@ -370,9 +369,8 @@ module Carto
                 SELECT v.id, v.type, v.category, v.locked
                   FROM visualizations AS v
                       LEFT JOIN external_sources AS es ON es.visualization_id = v.id
-                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id
-                      LEFT JOIN data_imports AS di ON di.id = edi.data_import_id AND di.state <> 'failure'
-                  WHERE di.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition}
+                      LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
+                  WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition}
                 ) AS results"
         args = [user_id, user_id]
 
@@ -391,9 +389,8 @@ module Carto
         query = "SELECT categories.id, categories.parent_id, (
               (SELECT COUNT(*) FROM visualizations AS v
                   LEFT JOIN external_sources AS es ON es.visualization_id = v.id
-                  LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id
-                  LEFT JOIN data_imports AS di ON di.id = edi.data_import_id AND di.state <> 'failure'
-                WHERE di.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition} AND v.category=categories.id) + "
+                  LEFT JOIN external_data_imports AS edi ON edi.external_source_id = es.id AND (SELECT state FROM data_imports WHERE id = edi.data_import_id) <> 'failure'
+                WHERE edi.id IS NULL AND v.user_id=? AND v.type IN (#{typeList}) #{sharedEmptyDatasetCondition} AND v.category=categories.id) + "
 
         if union_common_data
           query += "(SELECT COUNT(*) FROM visualizations AS v
