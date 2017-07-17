@@ -70,10 +70,14 @@ module CartoDB
     # Propagation flow: Table -> Table PrivacyManager -> Visualization -> Visualization NamedMap
     def propagate_to(visualizations, table_privacy_changed = false)
       visualizations.each do |visualization|
-        visualization.store_using_table({
+        if (visualization.user) 
+          visualization.store_using_table({
                                           privacy_text: ::UserTable::PRIVACY_VALUES_TO_TEXTS[privacy],
                                           map_id: visualization.map_id
                                         }, table_privacy_changed)
+        else
+          CartoDB.notify_error("Visualization user doesn't exist", visualization_id: visualization.id)
+        end
       end
 
       self

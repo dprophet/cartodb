@@ -195,6 +195,11 @@ class Table
   # it also needs the user used to search a table when the
   # name is not qualified
   def self.get_all_by_names(names, viewer_user)
+    if (!viewer_user)
+      CartoDB.notify_error("get_all_by_names user doesn't exist")
+      return []
+    end
+
     names.map { |t|
       user_id = viewer_user.id
       table_name, table_schema = Table.table_and_schema(t)
@@ -210,6 +215,11 @@ class Table
 
   # TODO: REFACTOR THIS patch introduced to continue with #3664
   def self.get_all_user_tables_by_names(names, viewer_user)
+    if (!viewer_user)
+      CartoDB.notify_error("get_all_by_names user doesn't exist")
+      return []
+    end
+
     names.map { |t|
       user_id = viewer_user.id
       table_name, table_schema = Table.table_and_schema(t)
