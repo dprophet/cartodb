@@ -76,7 +76,7 @@ module CartoDB
                                           map_id: visualization.map_id
                                         }, table_privacy_changed)
         else
-          CartoDB.notify_error("Visualization user doesn't exist", visualization_id: visualization.id)
+          CartoDB::Logger.error("Visualization user doesn't exist", visualization_id: visualization.id)
         end
       end
 
