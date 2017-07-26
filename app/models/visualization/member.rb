@@ -755,7 +755,7 @@ module CartoDB
       def do_store(propagate_changes = true, table_privacy_changed = false)
         if (!user) 
           CartoDB::Logger.error(message:
-                                "user doesn't exist for visualization #{self.name}: #{self.id}")
+                                "user doesn't exist for visualization ", visualization: self)
           return self
         end
 
