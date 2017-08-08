@@ -363,7 +363,7 @@ module CartoDB
 
       def common_data_table(table_name)
         @common_data_user ||= Carto::User.find_by_username(Cartodb.config[:common_data]["username"])
-        @common_data_user.visualizations.where(privacy: 'public', type: 'table', name: table_name).first
+        @common_data_user.visualizations.where(privacy: 'public', type: 'table', name: table_name).first if @common_data_user
       end
 
       attr_reader :runner, :table_registrar, :quota_checker, :database, :data_import_id
