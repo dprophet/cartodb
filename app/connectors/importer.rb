@@ -194,6 +194,9 @@ module CartoDB
           table.column_aliases = data['column_aliases']
           table.save
 
+          table.name_alias = data['name_alias']
+          table.column_aliases = data['column_aliases']
+
           url = "#{remote_base_url}/api/v1/maps/#{table_visualization_map_id}"
           response = http_client.get(url, params: {
             api_key: remote_api_key
@@ -214,11 +217,6 @@ module CartoDB
           table.map.view_bounds_ne = data['view_bounds_ne']
           table.map.legends = data['legends']
           table.map.scrollwheel = data['scrollwheel']
-          table.alias = data['alias']
-          table.schema_alias = data['schema_alias']
-          table.aliases = data['aliases']
-          table.name_alias = data['name_alias']
-          table.column_aliases = data['column_aliases']
           table.save
 
           # Get remote vis layer configs
@@ -303,6 +301,7 @@ module CartoDB
 
       def rename(result, current_name, new_name)
         taken_names = Carto::Db::UserSchema.new(table_registrar.user).table_names
+        taken_names += common_data_tables
         new_name = Carto::ValidTableNameProposer.new.propose_valid_table_name(new_name, taken_names: taken_names)
 
         database.execute(%{
@@ -373,6 +372,15 @@ module CartoDB
 
       def exists_user_table_for_user_id(table_name, user_id)
         !Carto::UserTable.where(name: table_name, user_id: user_id).first.nil?
+      end
+
+      def common_data_tables
+        common_data_user = Carto::User.find_by_username(Cartodb.config[:common_data]["username"])
+        if common_data_user
+          common_data_user.visualizations.where(privacy: 'public', type: 'table', name: table_name)
+        else
+          []
+        end
       end
 
       attr_reader :runner, :table_registrar, :quota_checker, :database, :data_import_id

@@ -298,8 +298,8 @@ class User < Sequel::Model
     builder? && common_data_outdated?
   end
 
-  def load_common_data(visualizations_api_url)
-    CartoDB::Visualization::CommonDataService.new.load_common_data_for_user(self, visualizations_api_url)
+  def load_common_data(visualizations_api_url, update_only = false)
+    CartoDB::Visualization::CommonDataService.new.load_common_data_for_user(self, visualizations_api_url, update_only)
   rescue => e
     CartoDB.notify_error(
       "Error loading common data for user",

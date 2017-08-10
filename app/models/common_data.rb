@@ -87,13 +87,13 @@ class CommonData
         params: { per_page: NO_PAGE_LIMIT },
         followlocation: true
       )
-      is_https_request = (request.url =~ /^https:\/\//)
-      cached_data = redis_cache.get(is_https_request)
+      cache_key = request.url
+      cached_data = redis_cache.get(cache_key)
       return cached_data[:body] unless cached_data.nil?
       response = request.run
       if response.code == 200
         body = response.response_body
-        redis_cache.set(is_https_request, response.headers, response.response_body)
+        redis_cache.set(cache_key, response.headers, response.response_body)
         body
       end
     rescue Exception => e

@@ -1439,10 +1439,18 @@ class Table
   # Gets a valid postgresql table name for a given database
   # See http://www.postgresql.org/docs/9.5/static/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
   def get_valid_name(contendent)
-    user_table_names = owner.tables.map(&:name)
+    user_table_names = owner.tables.map(&:name) + common_data_table_names
 
     # We only want to check for UserTables names
     Carto::ValidTableNameProposer.new.propose_valid_table_name(contendent, taken_names: user_table_names)
+  end
+
+  def common_data_table_names
+    if common_data_user
+      common_data_user.visualizations.where(type: 'table', privacy: 'public').map(:name)
+    else
+      []
+    end
   end
 
   def self.sanitize_columns(table_name, options={})
