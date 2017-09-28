@@ -753,6 +753,12 @@ module CartoDB
       end
 
       def do_store(propagate_changes = true, table_privacy_changed = false)
+        if (!user) 
+          CartoDB::Logger.error(message:
+                                "user doesn't exist for visualization ", visualization: self)
+          return self
+        end
+
         if password_protected?
           raise CartoDB::InvalidMember.new('No password set and required') unless has_password?
         else
