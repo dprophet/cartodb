@@ -309,6 +309,7 @@ module CartoDB
 
         new_name
       rescue => exception
+        byebug
         CartoDB.notify_debug('Error while renaming at importer', { current_name: current_name, new_name: new_name, rename_attempts: rename_attempts, result: result.inspect, error: exception.inspect}) if rename_attempts == 1
         message = "Silently retrying renaming #{current_name} to #{target_new_name} (current: #{new_name}). ERROR: #{exception}"
         runner.log.append(message)
@@ -362,8 +363,9 @@ module CartoDB
       end
 
       def common_data_table(table_name)
-        @common_data_user ||= Carto::User.find_by_username(Cartodb.config[:common_data]["username"])
-        @common_data_user.visualizations.where(privacy: 'public', type: 'table', name: table_name).first if @common_data_user
+        if common_data_user
+          common_data_user.visualizations.where(privacy: 'public', type: 'table', name: table_name).first
+        end
       end
 
       attr_reader :runner, :table_registrar, :quota_checker, :database, :data_import_id
