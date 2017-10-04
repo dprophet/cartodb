@@ -138,6 +138,10 @@ describe Api::Json::VisualizationsController do
       login(@user)
     end
 
+    after(:all) do
+      clear_categories
+    end
+
     it 'gets categories & sub categories' do
       get_json CartoDB.url(self, 'api_v1_visualizations_subcategories', {}, @user) do |response|
         response.status.should be_success
@@ -185,6 +189,10 @@ describe Api::Json::VisualizationsController do
       @v1 = Visualization::Member.new(random_viz_attributes(user_id: @user.id, name: 'v1', locked:false, category: @childCat1[:id], tags: ['tagx', 'tagy'])).store
       @v2 = Visualization::Member.new(random_viz_attributes(user_id: @user.id, name: 'v2', locked:true, category: @childCat2[:id], tags: ['tagx'])).store
       @v3 = Visualization::Member.new(random_viz_attributes(user_id: @user.id, name: 'v3', locked:false, category: @childCat2[:id], tags: ['tagy'])).store
+    end
+
+    after(:all) do
+      clear_categories
     end
 
     it 'gets visualizations' do
@@ -351,15 +359,9 @@ describe Api::Json::VisualizationsController do
   end
 
   def init_categories
-    @parentCat = Carto::Category.new(type: 1, name: 'Datasets', parent_id: 0)
-    @parentCat.id = 1
-    @parentCat.save!
-    @childCat1 = Carto::Category.new(type: 1, name: 'Energy', parent_id: 1)
-    @childCat1.id = 2
-    @childCat1.save!
-    @childCat2 = Carto::Category.new(type: 1, name: 'Infrastructure', parent_id: 1)
-    @childCat2.id = 3
-    @childCat2.save!
+    @parentCat = FactoryGirl.create(:category, id: 1, type: 1, name: 'Datasets', parent_id: 0)
+    @childCat1 = FactoryGirl.create(:category, id: 2, type: 1, name: 'Energy', parent_id: 1)
+    @childCat2 = FactoryGirl.create(:category, id: 3, type: 1, name: 'Infrastructure', parent_id: 1)
   end
 
   def random_viz_attributes(attributes={})

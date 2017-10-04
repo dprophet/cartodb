@@ -1464,7 +1464,7 @@ class Table
     existing_names = options[:name_candidates] || options[:connection]["select relname from pg_stat_user_tables WHERE schemaname='#{database_schema}'"].map(:relname) if options[:connection]
     existing_names = existing_names + SYSTEM_TABLE_NAMES
 
-    common_data_username = Cartodb.config[:common_data]["username"] if Cartodb.config[:common_data]
+    common_data_username = Cartodb.get_config(:common_data, 'username')
     common_data_user = Carto::User.find_by_username(common_data_username)
     if common_data_user
       lib_names = common_data_user.visualizations.where(type: 'table', privacy: 'public').select(:name).map { |row| row.name }

@@ -12,15 +12,10 @@ include CartoDB
 describe Carto::Category do
   before(:all) do
     clear_categories
-    @parentCat = Carto::Category.new(type: 1, name: 'Datasets', parent_id: 0)
-    @parentCat.id = 1
-    @parentCat.save!
-    @childCat1 = Carto::Category.new(type: 1, name: 'Energy', parent_id: 1)
-    @childCat1.id = 2
-    @childCat1.save!
-    @childCat2 = Carto::Category.new(type: 1, name: 'Infrastructure', parent_id: 1)
-    @childCat2.id = 3
-    @childCat2.save!
+    @user = FactoryGirl.create(:carto_user)
+    @parentCat = FactoryGirl.create(:category, id: 1, type: 1, name: 'Datasets', parent_id: 0)
+    @childCat1 = FactoryGirl.create(:category, id: 2, type: 1, name: 'Energy', parent_id: 1)
+    @childCat2 = FactoryGirl.create(:category, id: 3, type: 1, name: 'Infrastructure', parent_id: 1)
   end
 
   before(:each) do
@@ -29,16 +24,10 @@ describe Carto::Category do
     Visualization.repository  = DataRepository::Backend::Sequel.new(@db, :visualizations)
 
     CartoDB::NamedMapsWrapper::NamedMaps.any_instance.stubs(:get => nil, :create => true, :update => true)
+  end
 
-    # For relator->permission
-    user_id = UUIDTools::UUID.timestamp_create.to_s
-    user_name = 'whatever'
-    user_apikey = '123'
-    @user_mock = mock
-    @user_mock.stubs(:id).returns(user_id)
-    @user_mock.stubs(:username).returns(user_name)
-    @user_mock.stubs(:api_key).returns(user_apikey)
-    Visualization::Relator.any_instance.stubs(:user).returns(@user_mock)
+  after(:all) do
+    clear_categories
   end
 
   describe 'initialization' do
@@ -50,44 +39,55 @@ describe Carto::Category do
     end
 
     it 'visualization should have default category as nil' do
-      v1 = Visualization::Member.new(random_attributes(user_id: @user_mock.id, name: 'v1', locked:true)).store
+      v1 = Visualization::Member.new(random_attributes(user_id: @user.id, name: 'v1', locked:true)).store
 
       vqb1 = Carto::VisualizationQueryBuilder.new.with_id(v1.id).build
       vqb1.first[:category].should eq nil
+
+      v1.delete
     end
 
     it 'should search by category correctly' do
-      v1 = Visualization::Member.new(random_attributes(user_id: @user_mock.id, name: 'v1', locked:true, category: @childCat1[:id])).store
-      v2 = Visualization::Member.new(random_attributes(user_id: @user_mock.id, name: 'v2', locked:true, category: @childCat2[:id])).store
+      v1 = Visualization::Member.new(random_attributes(user_id: @user.id, name: 'v1', locked:true, category: @childCat1[:id])).store
+      v2 = Visualization::Member.new(random_attributes(user_id: @user.id, name: 'v2', locked:true, category: @childCat2[:id])).store
 
       vqb1 = Carto::VisualizationQueryBuilder.new.with_parent_category(@childCat1[:id]).build.map(&:id)
       vqb1.should include v1.id
 
       vqb2 = Carto::VisualizationQueryBuilder.new.with_parent_category(@childCat2[:id]).build.map(&:id)
       vqb2.should include v2.id
+
+      v1.delete
+      v2.delete
     end
   end
 
   describe 'searching' do
     it 'should search by parent category correctly' do
-      v1 = Visualization::Member.new(random_attributes(user_id: @user_mock.id, name: 'v1', locked:true, category: @childCat1[:id])).store
-      v2 = Visualization::Member.new(random_attributes(user_id: @user_mock.id, name: 'v2', locked:true, category: @childCat2[:id])).store
+      v1 = Visualization::Member.new(random_attributes(user_id: @user.id, name: 'v1', locked:true, category: @childCat1[:id])).store
+      v2 = Visualization::Member.new(random_attributes(user_id: @user.id, name: 'v2', locked:true, category: @childCat2[:id])).store
 
       vqb1 = Carto::VisualizationQueryBuilder.new.with_parent_category(@parentCat).build.map(&:id)
 
       vqb1.should include v1.id
       vqb1.should include v2.id
+
+      v1.delete
+      v2.delete
     end
 
     it 'should search by category correctly' do
-      v1 = Visualization::Member.new(random_attributes(user_id: @user_mock.id, name: 'v1', locked:true, category: @childCat1[:id])).store
-      v2 = Visualization::Member.new(random_attributes(user_id: @user_mock.id, name: 'v2', locked:true, category: @childCat2[:id])).store
+      v1 = Visualization::Member.new(random_attributes(user_id: @user.id, name: 'v1', locked:true, category: @childCat1[:id])).store
+      v2 = Visualization::Member.new(random_attributes(user_id: @user.id, name: 'v2', locked:true, category: @childCat2[:id])).store
 
       vqb1 = Carto::VisualizationQueryBuilder.new.with_parent_category(@childCat1[:id]).build.map(&:id)
       vqb1.should include v1.id
 
       vqb2 = Carto::VisualizationQueryBuilder.new.with_parent_category(@childCat2[:id]).build.map(&:id)
       vqb2.should include v2.id
+
+      v1.delete
+      v2.delete
     end
   end
 
