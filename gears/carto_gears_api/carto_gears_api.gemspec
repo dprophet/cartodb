@@ -6,7 +6,7 @@ require "carto_gears_api/version"
 # Describe your gem and declare its dependencies:
 Gem::Specification.new do |s|
   s.name        = "carto_gears_api"
-  s.version     = CartoGearsApi::VERSION
+  s.version     = CartoGearsApi::VERSION.dup
   s.authors     = ["CARTO"]
   s.email       = ["support@carto.com"]
   s.homepage    = "https://carto.com"
