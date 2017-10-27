@@ -502,6 +502,52 @@ class Table
     end
   end
 
+  def create_default_map_and_layers
+    base_layer = ::ModelFactories::LayerFactory.get_default_base_layer(owner)
+
+    map = ::ModelFactories::MapFactory.get_map(base_layer, user_id, id)
+    @user_table.map_id = map.id
+
+    map.add_layer(base_layer)
+
+    data_layer = ::ModelFactories::LayerFactory.get_default_data_layer(name, owner, the_geom_type)
+    map.add_layer(data_layer)
+
+    if base_layer.supports_labels_layer?
+      labels_layer = ::ModelFactories::LayerFactory.get_default_labels_layer(base_layer)
+      map.add_layer(labels_layer)
+    end
+  end
+
+  def create_default_visualization
+    kind = is_raster? ? CartoDB::Visualization::Member::KIND_RASTER : CartoDB::Visualization::Member::KIND_GEOM
+
+    esv = external_source_visualization
+
+    member = CartoDB::Visualization::Member.new(
+      name:         self.name,
+      map_id:       self.map_id,
+      type:         CartoDB::Visualization::Member::TYPE_CANONICAL,
+      description:  @user_table.description,
+      attributions: esv.nil? ? nil : esv.attributions,
+      source:       esv.nil? ? nil : esv.source,
+      tags:         (@user_table.tags.split(',') if @user_table.tags),
+      privacy:      UserTable::PRIVACY_VALUES_TO_TEXTS[default_privacy_value],
+      user_id:      self.owner.id,
+      kind:         kind,
+      exportable:   esv.nil? ? true : esv.exportable,
+      export_geom:  esv.nil? ? true : esv.export_geom,
+      category:     esv.nil? ? nil : esv.category
+    )
+
+    member.store
+    member.map.recalculate_bounds!
+    member.map.recenter_using_bounds!
+    member.map.recalculate_zoom!
+
+    CartoDB::Visualization::Overlays.new(member).create_default_overlays
+  end
+
   def before_destroy
     @table_visualization                = table_visualization
     @fully_dependent_visualizations_cache     = fully_dependent_visualizations.to_a

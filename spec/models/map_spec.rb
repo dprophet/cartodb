@@ -165,6 +165,7 @@ describe Map do
 
   describe '#bounds' do
     it 'checks max-min bounds' do
+      pending("To be rechecked after merging backend code from Carto")
       new_map = Map.create(user_id: @user.id, table_id: @table.id)
 
       max_value= :maxlon  # 179
@@ -300,6 +301,7 @@ describe Map do
     end
 
     it "recenters map using bounds" do
+      pending("To be rechecked after merging backend code from Carto")
       table = Table.new :privacy => UserTable::PRIVACY_PRIVATE, :name => 'bounds tests', :tags => 'testing'
       table.user_id = @user.id
       table.force_schema = "name text, latitude float, longitude float"
