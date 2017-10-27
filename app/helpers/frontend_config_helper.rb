@@ -52,6 +52,10 @@ module FrontendConfigHelper
       config[:dataservices_enabled] = Cartodb.get_config(:dataservices, 'enabled')
     end
 
+    if Cartodb.config[:shared_empty_dataset_name].present?
+      config[:shared_empty_dataset_name] = Cartodb.config[:shared_empty_dataset_name]
+    end
+
     config.to_json
   end
 end
