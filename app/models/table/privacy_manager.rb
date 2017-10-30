@@ -71,10 +71,11 @@ module CartoDB
     def propagate_to(visualizations, table_privacy_changed = false)
       visualizations.each do |visualization|
         if visualization.user
-          visualization.store_using_table({
-                                          privacy_text: ::UserTable::PRIVACY_VALUES_TO_TEXTS[privacy],
-                                          map_id: visualization.map_id
-                                        }, table_privacy_changed)
+          if visualization.type == CartoDB::Visualization::Member::TYPE_CANONICAL
+            # Each table has a canonical visualization which must have privacy synced
+            visualization.privacy = ::UserTable::PRIVACY_VALUES_TO_TEXTS[privacy]
+          end
+          visualization.store_using_table(table_privacy_changed)
         else
           CartoDB::Logger.error(message:
                                 "user doesn't exist for visualization", visualization: visualization)
