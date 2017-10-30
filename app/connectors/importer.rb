@@ -301,8 +301,8 @@ module CartoDB
 
       def rename(result, current_name, new_name)
         taken_names = Carto::Db::UserSchema.new(table_registrar.user).table_names
-        taken_names += common_data_tables
-        new_name = Carto::ValidTableNameProposer.new.propose_valid_table_name(new_name, taken_names: taken_names)
+        taken_names += common_data_tables.map(&:name)
+        new_name = Carto::ValidTableNameProposer.new.propose_valid_table_name(new_name, taken_names: taken_names.unique)
 
         database.execute(%{
           ALTER TABLE "#{ORIGIN_SCHEMA}"."#{current_name}" RENAME TO "#{new_name}"
