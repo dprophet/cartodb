@@ -29,8 +29,8 @@ CartoDB::Application.configure do
   # just comment this out and Rails will serve the files
 
   # Use a different logger for distributed setups
-  config.logger = Logger.new(STDOUT)
-  # config.logger = ActiveSupport::BufferedLogger.new(Carto::Conf.new.log_file_path('development.log'))
+  # config.logger = Logger.new(STDOUT)
+  config.logger = ActiveSupport::BufferedLogger.new(Carto::Conf.new.log_file_path('development.log'))
 
   # Adjust the log level. Note that assigning to `config.log_levl` would
   # have no effect here, since we have set the logger explicitly.
