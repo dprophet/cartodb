@@ -370,13 +370,11 @@ module CartoDB
 
       private
 
-      def exists_user_table_for_user_id(table_name, user_id)
-        !Carto::UserTable.where(name: table_name, user_id: user_id).first.nil?
-      end
-
-      def common_data_table(table_name)
+      def common_data_tables
         if common_data_user
-          common_data_user.visualizations.where(privacy: 'public', type: 'table', name: table_name).first
+          common_data_user.visualizations.where(privacy: 'public', type: 'table')
+        else
+          []
         end
       end
 
