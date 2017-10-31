@@ -195,7 +195,7 @@ DESC
 
       #common_data_url = CartoDB::Visualization::CommonDataService.build_url("test")
       #::Resque.enqueue(::Resque::UserJobs::CommonData::LoadCommonData, user.id, "test")
-      ::Resque.enqueue(::Resque::UserJobs::CommonData::LoadCommonData, user.id, "http://localhost.localdomain/user/mapsdata/api/v1/viz?privacy=public&type=table")
+      ::Resque.enqueue(::Resque::UserJobs::Signup::NewUser, user.id, "http://localhost.localdomain/user/mapsdata/api/v1/viz?privacy=public&type=table")
 
     end
 
